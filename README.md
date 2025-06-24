@@ -1,4 +1,4 @@
-# CI/CD Thing - Automatic Website & App Deployment
+# CICD-Thing 🚀
 
 🚀 **Automatically deploy your websites and applications when you push code to GitHub!**
 
@@ -22,6 +22,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 - **📱 Multiple Projects**: Handle many websites/apps from one tool
 - **🎯 Smart**: Only deploys from specific branches (like `main`)
 - **🔍 Transparent**: See exactly what's happening with detailed logs
+- **⚙️ Flexible Configuration**: TOML-based config with multiple location support
 
 ## How It Works 🔄
 
@@ -54,34 +55,169 @@ go mod tidy
 ```
 
 ### Step 2: Configure Your Settings
+
+The application uses TOML configuration files and will automatically create one for you!
+
 ```bash
-# Copy the example configuration
-cp .env.example .env
-
-# Edit the .env file with your settings (see Configuration section below)
-nano .env  # or use any text editor
-```
-
-### Step 3: Start the Tool
-```bash
-# Option 1: Run directly
-go run main.go
-
-# Option 2: Build and run (recommended for production)
+# Build the application
 go build -o cicd-thing .
+
+# Run it once to create the default config
 ./cicd-thing
 ```
 
-### Step 4: Connect to GitHub
+The application will create a `config.toml` file and show you what needs to be configured:
+
+```
+=== CONFIGURATION REQUIRED ===
+A default configuration file has been created at: ./config.toml
+Please edit this file with your settings before running the application again.
+Required fields to configure:
+  - webhook_secret: Your GitHub webhook secret
+  - api_key: Your API key for authentication
+  - repositories: Map of repository names to local paths
+===============================
+```
+
+### Step 3: Edit Your Configuration
+```bash
+# Edit the config file with your settings
+nano config.toml  # or use any text editor
+```
+
+### Step 4: Start the Tool
+```bash
+# Run the application
+./cicd-thing
+```
+
+### Step 5: Connect to GitHub
 1. Go to your GitHub repository
 2. Click **Settings** → **Webhooks** → **Add webhook**
 3. Set **Payload URL** to: `http://your-server:3000/webhook`
 4. Set **Content type** to: `application/json`
-5. Set **Secret** to the same value as `WEBHOOK_SECRET` in your .env file
+5. Set **Secret** to the same value as `webhook_secret` in your config.toml file
 6. Select **Just the push event**
 7. Click **Add webhook**
 
 🎉 **That's it!** Now when you push code to GitHub, it will automatically deploy!
+
+## Configuration System ⚙️
+
+### Configuration File Locations
+
+The application searches for `config.toml` in these locations (in order):
+
+1. `./config.toml` (current directory) - **Best for development**
+2. `./config/config.toml` (local config directory)
+3. `/etc/cicd-thing/config.toml` (system-wide config) - **Best for production**
+4. `/usr/local/etc/cicd-thing/config.toml` (alternative system config)
+5. `~/.config/cicd-thing/config.toml` (user home directory)
+
+### Automatic Configuration Creation
+
+If no configuration file is found, the application will:
+- Create a comprehensive default `config.toml` in the current directory
+- Include helpful comments and examples for all options
+- Clearly mark required vs optional settings
+- Exit with instructions for you to configure it
+
+### Configuration Settings
+
+Your `config.toml` file contains all the settings. Here's what each section means:
+
+#### Required Settings (You MUST set these)
+
+```toml
+# Server settings
+port = "3000"
+webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED
+api_key = "YOUR_API_KEY_HERE"                # REQUIRED
+
+# Repository mappings - REQUIRED
+[repositories]
+"my-app" = "/var/www/my-app"
+"api-service" = "/opt/api-service"
+```
+
+| Setting | What It Does | Example |
+|---------|--------------|----------|
+| `webhook_secret` | Secret password GitHub uses to verify it's really GitHub calling | `abc123secret456` |
+| `api_key` | Password for manually triggering deployments | `myapikey789` |
+| `repositories` | Which GitHub repos go to which folders on your server | See examples below |
+
+#### Optional Settings (Have good defaults)
+
+```toml
+# Logging
+log_file = "./deployer.log"
+
+# Default commands to run for deployments
+default_commands = "git pull && npm ci && npm run build"
+
+# Branch filtering (only deploy from this branch)
+branch_filter = "main"
+
+# Performance settings
+concurrency_limit = 2
+timeout_seconds = 300
+
+# Notifications
+notify_on_rollback = false
+
+# Features
+dry_run = false
+
+# Security (optional)
+ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+```
+
+| Setting | What It Does | Default | Example |
+|---------|--------------|---------|----------|
+| `port` | What port the tool runs on | `3000` | `8080` |
+| `branch_filter` | Only deploy from this branch | `main` | `production` |
+| `timeout_seconds` | How long to wait before giving up | `300` (5 minutes) | `600` |
+| `dry_run` | Test mode (doesn't actually deploy) | `false` | `true` |
+
+### 📁 Repository Mapping (Which GitHub repos go where)
+
+Tell the tool which GitHub repository goes to which folder on your server:
+
+```toml
+[repositories]
+"johndoe/my-website" = "/var/www/my-website"
+"johndoe/api-service" = "/opt/api-service"
+"company/frontend" = "/var/www/frontend"
+```
+
+### 🔨 Deployment Commands (What to do when deploying)
+
+Tell the tool what commands to run when deploying each project:
+
+```toml
+[commands]
+# For a Node.js website:
+"my-website" = "git pull && npm ci && npm run build && pm2 restart my-website"
+
+# For a simple HTML site:
+"my-site" = "git pull && rsync -av ./ /var/www/html/"
+
+# For a Python app:
+"my-app" = "git pull && pip install -r requirements.txt && systemctl restart my-app"
+
+# For a Go application:
+"api-service" = "git pull && go build -o api . && systemctl restart api"
+```
+
+### 🔄 Rollback Commands (What to do if deployment fails)
+
+If something goes wrong, these commands will undo the deployment:
+
+```toml
+[rollback_commands]
+"my-website" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-website"
+"api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
+```
 
 ## 📚 Documentation for Everyone
 
@@ -89,63 +225,6 @@ go build -o cicd-thing .
 - **❓ [FAQ](FAQ.md)** - Common questions and answers
 - **🔧 [API Documentation](API.md)** - Technical API reference
 - **💡 [Deployment Examples](DEPLOYMENT_EXAMPLES.md)** - Real-world configuration examples
-
-## Configuration Settings ⚙️
-
-You need to edit the `.env` file to tell the tool about your projects. Here's what each setting means:
-
-### Required Settings (You MUST set these)
-
-| Setting | What It Does | Example |
-|---------|--------------|---------|
-| `WEBHOOK_SECRET` | Secret password GitHub uses to verify it's really GitHub calling | `abc123secret456` |
-| `API_KEY` | Password for manually triggering deployments | `myapikey789` |
-| `REPO_MAP` | Which GitHub repos go to which folders on your server | `myuser/website:~/mysite` |
-
-### Optional Settings (Have good defaults)
-
-| Setting | What It Does | Default | Example |
-|---------|--------------|---------|---------|
-| `PORT` | What port the tool runs on | `3000` | `8080` |
-| `BRANCH_FILTER` | Only deploy from this branch | `main` | `production` |
-| `TIMEOUT_SECONDS` | How long to wait before giving up | `300` (5 minutes) | `600` |
-| `DRY_RUN` | Test mode (doesn't actually deploy) | `false` | `true` |
-
-### 📁 Repository Mapping (Which GitHub repos go where)
-
-Tell the tool which GitHub repository goes to which folder on your server:
-
-```bash
-# Format: github-user/repo-name:path-on-your-server
-REPO_MAP=johndoe/my-website:~/websites/my-website
-
-# Multiple projects:
-REPO_MAP=johndoe/website:~/sites/website,johndoe/api:~/apps/api
-```
-
-### 🔨 Deployment Commands (What to do when deploying)
-
-Tell the tool what commands to run when deploying each project:
-
-```bash
-# For a Node.js website:
-COMMANDS_my-website=git pull && npm install && npm run build && pm2 restart my-website
-
-# For a simple HTML site:
-COMMANDS_my-site=git pull && rsync -av ./ /var/www/html/
-
-# For a Python app:
-COMMANDS_my-app=git pull && pip install -r requirements.txt && systemctl restart my-app
-```
-
-### 🔄 Rollback Commands (What to do if deployment fails)
-
-If something goes wrong, these commands will undo the deployment:
-
-```bash
-# Go back to previous version and restart:
-ROLLBACK_COMMANDS_my-website=git reset --hard HEAD~1 && npm run build && pm2 restart my-website
-```
 
 ## Available Endpoints 🌐
 
@@ -186,18 +265,27 @@ The tool provides several web endpoints you can use:
 ### Example Deployment Commands
 
 **Node.js Application:**
-```bash
-COMMANDS_myapp=git pull && npm ci && npm run build && pm2 restart myapp
+```toml
+[commands]
+"myapp" = "git pull && npm ci && npm run build && pm2 restart myapp"
 ```
 
 **Go Application:**
-```bash
-COMMANDS_api=git pull && go build -o api . && systemctl restart api
+```toml
+[commands]
+"api" = "git pull && go build -o api . && systemctl restart api"
 ```
 
 **Docker Application:**
-```bash
-COMMANDS_webapp=git pull && docker build -t webapp . && docker-compose up -d
+```toml
+[commands]
+"webapp" = "git pull && docker build -t webapp . && docker-compose up -d"
+```
+
+**Static Website:**
+```toml
+[commands]
+"website" = "git pull && npm run build && rsync -av dist/ /var/www/html/"
 ```
 
 ### Security Setup
@@ -213,8 +301,51 @@ COMMANDS_webapp=git pull && docker build -t webapp . && docker-compose up -d
    ```
 
 3. **Configure IP allowlist (optional):**
+   ```toml
+   ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
    ```
-   IP_ALLOWLIST=192.168.1.0/24,10.0.0.0/8
+
+## Production Deployment 🏭
+
+### System-wide Installation
+
+1. **Build the application:**
+   ```bash
+   go build -o cicd-thing .
+   ```
+
+2. **Install to system location:**
+   ```bash
+   sudo cp cicd-thing /usr/local/bin/
+   sudo mkdir -p /etc/cicd-thing
+   sudo cp config.toml.example /etc/cicd-thing/config.toml
+   ```
+
+3. **Configure for production:**
+   ```bash
+   sudo nano /etc/cicd-thing/config.toml
+   ```
+
+4. **Create systemd service (optional):**
+   ```bash
+   sudo tee /etc/systemd/system/cicd-thing.service > /dev/null <<EOF
+   [Unit]
+   Description=CICD-Thing Deployment Orchestrator
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=deploy
+   ExecStart=/usr/local/bin/cicd-thing
+   Restart=always
+   RestartSec=5
+
+   [Install]
+   WantedBy=multi-user.target
+   EOF
+
+   sudo systemctl enable cicd-thing
+   sudo systemctl start cicd-thing
    ```
 
 ## Monitoring
@@ -237,18 +368,23 @@ Monitor the `/health` endpoint for service status and configuration.
 
 ### Common Issues
 
-1. **Webhook not received:**
+1. **Configuration file not found:**
+   - Run the application once to create default config
+   - Check the search locations listed above
+   - Ensure file permissions are correct
+
+2. **Webhook not received:**
    - Check GitHub webhook configuration
-   - Verify webhook secret matches
+   - Verify webhook secret matches config.toml
    - Check server logs for signature verification errors
 
-2. **Deployment fails:**
-   - Check repository mapping in REPO_MAP
+3. **Deployment fails:**
+   - Check repository mapping in `[repositories]` section
    - Verify local path exists and is accessible
    - Check deployment commands are correct
    - Review timeout settings
 
-3. **Permission errors:**
+4. **Permission errors:**
    - Ensure server has access to local repositories
    - Check file permissions on deployment paths
    - Verify user has necessary privileges for commands
@@ -256,11 +392,19 @@ Monitor the `/health` endpoint for service status and configuration.
 ### Debug Mode
 
 Enable dry run mode for testing:
-```
-DRY_RUN=true
+```toml
+dry_run = true
 ```
 
 This will simulate deployments without executing commands.
+
+### Configuration Validation
+
+The application validates your configuration on startup and will show clear error messages for:
+- Missing required fields
+- Invalid TOML syntax
+- Incorrect file paths
+- Network configuration issues
 
 ## License
 

@@ -3,87 +3,77 @@ package config
 import (
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
+	"path/filepath"
 	"time"
 
-	"github.com/joho/godotenv"
+	"github.com/BurntSushi/toml"
 )
 
 // Config holds all configuration for the deployment orchestrator
 type Config struct {
 	// Server settings
-	Port         string
-	WebhookSecret string
-	APIKey       string
+	Port         string `toml:"port"`
+	WebhookSecret string `toml:"webhook_secret"`
+	APIKey       string `toml:"api_key"`
 
 	// Logging
-	LogFile string
+	LogFile string `toml:"log_file"`
 
 	// Repository mappings (repo -> local path)
-	RepoMap map[string]string
+	RepoMap map[string]string `toml:"repositories"`
 
 	// Commands per app
-	Commands        map[string]string
-	DefaultCommands string
+	Commands        map[string]string `toml:"commands"`
+	DefaultCommands string            `toml:"default_commands"`
 
 	// Rollback commands per app
-	RollbackCommands map[string]string
+	RollbackCommands map[string]string `toml:"rollback_commands"`
 
 	// Branch filtering
-	BranchFilter string
+	BranchFilter string `toml:"branch_filter"`
 
 	// Concurrency and timeouts
-	ConcurrencyLimit int
-	TimeoutSeconds   int
-	Timeout          time.Duration
+	ConcurrencyLimit int           `toml:"concurrency_limit"`
+	TimeoutSeconds   int           `toml:"timeout_seconds"`
+	Timeout          time.Duration `toml:"-"` // Computed field
 
 	// Notifications
-	NotifyOnRollback bool
+	NotifyOnRollback bool `toml:"notify_on_rollback"`
 
 	// Security
-	IPAllowlist []string
+	IPAllowlist []string `toml:"ip_allowlist"`
 
 	// Features
-	DryRun bool
+	DryRun bool `toml:"dry_run"`
 }
 
-// Load reads configuration from environment variables and .env file
+// Load reads configuration from config.toml file in multiple locations
 func Load() (*Config, error) {
-	// Load .env file if it exists
-	if err := godotenv.Load(); err != nil {
-		// .env file is optional, so we don't fail if it doesn't exist
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("error loading .env file: %w", err)
-		}
-	}
-
 	cfg := &Config{
-		Port:             getEnv("PORT", "3000"),
-		WebhookSecret:    getEnv("WEBHOOK_SECRET", ""),
-		APIKey:           getEnv("API_KEY", ""),
-		LogFile:          getEnv("LOG_FILE", "/var/log/deployer.log"),
-		DefaultCommands:  getEnv("DEFAULT_COMMANDS", "git pull && npm ci && npm run build"),
-		BranchFilter:     getEnv("BRANCH_FILTER", "main"),
-		ConcurrencyLimit: getEnvInt("CONCURRENCY_LIMIT", 2),
-		TimeoutSeconds:   getEnvInt("TIMEOUT_SECONDS", 300),
-		NotifyOnRollback: getEnvBool("NOTIFY_ON_ROLLBACK", false),
-		DryRun:           getEnvBool("DRY_RUN", false),
+		// Set defaults
+		Port:             "3000",
+		LogFile:          "./deployer.log",
+		DefaultCommands:  "git pull && npm ci && npm run build",
+		BranchFilter:     "main",
+		ConcurrencyLimit: 2,
+		TimeoutSeconds:   300,
+		NotifyOnRollback: false,
+		DryRun:           false,
 	}
 
+	// Find config file in multiple locations
+	configPath, err := findConfigFile()
+	if err != nil {
+		return nil, err
+	}
+
+	// Decode TOML file
+	if _, err := toml.DecodeFile(configPath, cfg); err != nil {
+		return nil, fmt.Errorf("error loading config file %s: %w", configPath, err)
+	}
+
+	// Compute derived fields
 	cfg.Timeout = time.Duration(cfg.TimeoutSeconds) * time.Second
-
-	// Parse repository mappings
-	cfg.RepoMap = parseRepoMap(getEnv("REPO_MAP", ""))
-
-	// Parse per-app commands
-	cfg.Commands = parseCommands("COMMANDS_")
-
-	// Parse rollback commands
-	cfg.RollbackCommands = parseCommands("ROLLBACK_COMMANDS_")
-
-	// Parse IP allowlist
-	cfg.IPAllowlist = parseIPAllowlist(getEnv("IP_ALLOWLIST", ""))
 
 	// Validate required fields
 	if err := cfg.validate(); err != nil {
@@ -91,6 +81,105 @@ func Load() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// findConfigFile searches for config.toml in multiple locations
+func findConfigFile() (string, error) {
+	// Define search paths in order of preference
+	searchPaths := []string{
+		"./config.toml",                    // Current directory
+		"./config/config.toml",             // Local config directory
+		"/etc/cicd-thing/config.toml",       // System-wide config
+		"/usr/local/etc/cicd-thing/config.toml", // Alternative system config
+	}
+
+	// Add user home directory path
+	if homeDir, err := os.UserHomeDir(); err == nil {
+		searchPaths = append(searchPaths, filepath.Join(homeDir, ".config", "cicd-thing", "config.toml"))
+	}
+
+	// Search for existing config file
+	for _, path := range searchPaths {
+		if _, err := os.Stat(path); err == nil {
+			fmt.Printf("Found config file: %s\n", path)
+			return path, nil
+		}
+	}
+
+	// No config file found, create default in current directory
+	defaultPath := "./config.toml"
+	if err := createDefaultConfig(defaultPath); err != nil {
+		return "", fmt.Errorf("failed to create default config: %w", err)
+	}
+
+	fmt.Printf("\n=== CONFIGURATION REQUIRED ===\n")
+	fmt.Printf("A default configuration file has been created at: %s\n", defaultPath)
+	fmt.Printf("Please edit this file with your settings before running the application again.\n")
+	fmt.Printf("Required fields to configure:\n")
+	fmt.Printf("  - webhook_secret: Your GitHub webhook secret\n")
+	fmt.Printf("  - api_key: Your API key for authentication\n")
+	fmt.Printf("  - repositories: Map of repository names to local paths\n")
+	fmt.Printf("===============================\n\n")
+
+	return "", fmt.Errorf("configuration file created at %s - please configure it and restart the application", defaultPath)
+}
+
+// createDefaultConfig creates a default config.toml file with example values
+func createDefaultConfig(path string) error {
+	// Ensure directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+
+	defaultConfig := `# CICD-Thing Configuration File
+# Please configure the required settings below
+
+# Server settings
+port = "3000"
+webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook secret
+api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
+
+# Logging
+log_file = "./deployer.log"
+
+# Default commands to run for deployments
+default_commands = "git pull && npm ci && npm run build"
+
+# Branch filtering (only deploy from this branch)
+branch_filter = "main"
+
+# Performance settings
+concurrency_limit = 2
+timeout_seconds = 300
+
+# Notifications
+notify_on_rollback = false
+
+# Features
+dry_run = false
+
+# Security (optional)
+# ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+
+# Repository mappings - REQUIRED
+# Map repository names to local deployment paths
+[repositories]
+# "my-app" = "/var/www/my-app"
+# "api-service" = "/opt/api-service"
+
+# Per-application deployment commands (optional)
+[commands]
+# "my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
+# "api-service" = "git pull && go build && systemctl restart api-service"
+
+# Per-application rollback commands (optional)
+[rollback_commands]
+# "my-app" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-app"
+# "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
+`
+
+	return os.WriteFile(path, []byte(defaultConfig), 0644)
 }
 
 // validate checks that required configuration is present
@@ -105,90 +194,4 @@ func (c *Config) validate() error {
 		return fmt.Errorf("REPO_MAP is required")
 	}
 	return nil
-}
-
-// getEnv gets an environment variable with a default value
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
-// getEnvInt gets an environment variable as an integer with a default value
-func getEnvInt(key string, defaultValue int) int {
-	if value := os.Getenv(key); value != "" {
-		if intValue, err := strconv.Atoi(value); err == nil {
-			return intValue
-		}
-	}
-	return defaultValue
-}
-
-// getEnvBool gets an environment variable as a boolean with a default value
-func getEnvBool(key string, defaultValue bool) bool {
-	if value := os.Getenv(key); value != "" {
-		if boolValue, err := strconv.ParseBool(value); err == nil {
-			return boolValue
-		}
-	}
-	return defaultValue
-}
-
-// parseRepoMap parses the REPO_MAP environment variable
-// Format: "repo1:path1,repo2:path2"
-func parseRepoMap(repoMapStr string) map[string]string {
-	repoMap := make(map[string]string)
-	if repoMapStr == "" {
-		return repoMap
-	}
-
-	pairs := strings.Split(repoMapStr, ",")
-	for _, pair := range pairs {
-		parts := strings.SplitN(strings.TrimSpace(pair), ":", 2)
-		if len(parts) == 2 {
-			repo := strings.TrimSpace(parts[0])
-			path := strings.TrimSpace(parts[1])
-			if repo != "" && path != "" {
-				repoMap[repo] = path
-			}
-		}
-	}
-	return repoMap
-}
-
-// parseCommands parses environment variables with a given prefix
-// For example, COMMANDS_Hello-World=git pull && npm build
-func parseCommands(prefix string) map[string]string {
-	commands := make(map[string]string)
-	for _, env := range os.Environ() {
-		if strings.HasPrefix(env, prefix) {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) == 2 {
-				key := strings.TrimPrefix(parts[0], prefix)
-				value := parts[1]
-				if key != "" && value != "" {
-					commands[key] = value
-				}
-			}
-		}
-	}
-	return commands
-}
-
-// parseIPAllowlist parses the IP_ALLOWLIST environment variable
-// Format: "ip1,ip2,ip3"
-func parseIPAllowlist(allowlistStr string) []string {
-	if allowlistStr == "" {
-		return nil
-	}
-
-	ips := strings.Split(allowlistStr, ",")
-	var result []string
-	for _, ip := range ips {
-		if trimmed := strings.TrimSpace(ip); trimmed != "" {
-			result = append(result, trimmed)
-		}
-	}
-	return result
 }

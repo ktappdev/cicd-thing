@@ -1,0 +1,51 @@
+# CICD-Thing Configuration File
+# Copy this file to config.toml and update with your values
+# The application will search for config.toml in these locations (in order):
+#   1. ./config.toml (current directory)
+#   2. ./config/config.toml (local config directory)
+#   3. /etc/cicd-thing/config.toml (system-wide config)
+#   4. /usr/local/etc/cicd-thing/config.toml (alternative system config)
+#   5. ~/.config/cicd-thing/config.toml (user home directory)
+
+# Server settings
+port = "3000"
+webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook secret
+api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
+
+# Logging
+log_file = "./deployer.log"
+
+# Default commands to run for deployments
+default_commands = "git pull && npm ci && npm run build"
+
+# Branch filtering (only deploy from this branch)
+branch_filter = "main"
+
+# Performance settings
+concurrency_limit = 2
+timeout_seconds = 300
+
+# Notifications
+notify_on_rollback = false
+
+# Features
+dry_run = false
+
+# Security (optional)
+# ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+
+# Repository mappings - REQUIRED
+# Map repository names to local deployment paths
+[repositories]
+"my-app" = "/var/www/my-app"
+"api-service" = "/opt/api-service"
+
+# Per-application deployment commands (optional)
+[commands]
+"my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
+"api-service" = "git pull && go build && systemctl restart api-service"
+
+# Per-application rollback commands (optional)
+[rollback_commands]
+"my-app" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-app"
+"api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
