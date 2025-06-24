@@ -45,7 +45,7 @@ func (s *Server) Start() error {
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/status", s.handleStatus)
 	http.HandleFunc("/deploy", s.security.IPAllowlistMiddleware(s.security.AuthMiddleware(s.handleManualDeploy)))
-	http.HandleFunc("/logs", s.security.IPAllowlistMiddleware(s.security.AuthMiddleware(s.handleLogs)))
+	http.HandleFunc("/logs", s.security.IPAllowlistMiddleware(s.security.RateLimitMiddleware(s.handleLogs)))
 
 	// Start server
 	addr := ":" + s.config.Port

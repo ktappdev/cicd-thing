@@ -135,15 +135,14 @@ curl -X POST "http://localhost:3000/deploy?repo=octocat/Hello-World&branch=main&
 
 Provides a web-based log viewer interface for monitoring deployment logs and system activity.
 
-**Authentication:** Required
+**Rate Limiting:** Limited to 30 requests per minute per IP address
 
 **Query Parameters:**
 - `limit` (optional): Number of log lines to display (10, 20, 50, 100, 200). Defaults to 50.
 
 **Example Request:**
 ```bash
-curl "http://localhost:3000/logs?limit=100" \
-  -H "Authorization: Bearer your_api_key"
+curl "http://localhost:3000/logs?limit=100"
 ```
 
 **Response:**
@@ -164,8 +163,8 @@ Returns an HTML page with:
 - Auto-refresh functionality
 
 **Security:**
-- Requires API key authentication
 - Respects IP allowlist configuration
+- Rate limited to prevent abuse
 - Read-only access to log files
 
 ### GitHub Webhook
@@ -214,7 +213,13 @@ Error responses include a descriptive message:
 
 ## Rate Limiting
 
-Currently, no rate limiting is implemented, but it can be added via middleware.
+Rate limiting is implemented for the `/logs` endpoint to ensure optimal performance:
+
+- **Limit:** 30 requests per minute per IP address
+- **Response code:** 429 Too Many Requests (when limit exceeded)
+- **Error message:** "Rate limit exceeded. Please wait before making more requests."
+
+This rate limit is designed to allow normal human viewing of logs while preventing abuse.
 
 ## IP Allowlisting
 

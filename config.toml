@@ -1,0 +1,44 @@
+# CICD-Thing Configuration File
+# Please configure the required settings below
+
+# Server settings
+port = "3001"
+webhook_secret = "test_webhook_secret_123456789"  # Test webhook secret
+api_key = "test_api_key_123456789"                # Test API key
+
+# Logging
+log_file = "./deployer.log"
+
+# Default commands to run for deployments
+default_commands = "git pull && npm ci && npm run build"
+
+# Branch filtering (only deploy from this branch)
+branch_filter = "main"
+
+# Performance settings
+concurrency_limit = 2
+timeout_seconds = 300
+
+# Notifications
+notify_on_rollback = false
+
+# Features
+dry_run = false
+
+# Security (optional)
+# ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+
+# Repository mappings - REQUIRED
+# Map repository names to local deployment paths
+[repositories]
+"test-app" = "/tmp/test-app"
+
+# Per-application deployment commands (optional)
+[commands]
+# "my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
+# "api-service" = "git pull && go build && systemctl restart api-service"
+
+# Per-application rollback commands (optional)
+[rollback_commands]
+# "my-app" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-app"
+# "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"

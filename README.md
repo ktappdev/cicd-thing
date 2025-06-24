@@ -144,7 +144,7 @@ api_key = "YOUR_API_KEY_HERE"                # REQUIRED
 | Setting | What It Does | Example |
 |---------|--------------|----------|
 | `webhook_secret` | Secret password GitHub uses to verify it's really GitHub calling | `abc123secret456` |
-| `api_key` | Password for manually triggering deployments | `myapikey789` |
+| `api_key` | Password for manually triggering deployments (not needed for log viewing) | `myapikey789` |
 | `repositories` | Which GitHub repos go to which folders on your server | See examples below |
 
 #### Optional Settings (Have good defaults)
@@ -258,7 +258,7 @@ The tool provides several web endpoints you can use:
 ### 📋 `/logs` - Log Viewer
 - **What it does:** Displays real-time deployment and system logs with project identification
 - **How to use:** Visit `http://your-server:3000/logs?limit=50` in your browser
-- **Authentication:** Requires API key (add `?api_key=your-key` to URL)
+- **Rate limiting:** Limited to 30 requests per minute per IP address for optimal performance
 - **What you'll see:** Color-coded logs with project prefixes, configurable line limits, and auto-refresh
 
 ## Usage Examples
@@ -392,7 +392,7 @@ http://localhost:3000/logs?limit=50
 - 🎯 **Manual refresh** button
 - 🌈 **Color-coded** log levels (ERROR, INFO, SUCCESS, WARNING)
 - 📱 **Mobile-friendly** responsive design
-- 🔒 **Secure** - requires API key authentication
+- 🔒 **Secure** - rate limited to prevent abuse (30 requests/minute per IP)
 
 **Example log output:**
 ```

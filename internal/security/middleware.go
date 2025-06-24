@@ -4,6 +4,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/ktappdev/cicd-thing/internal/config"
 )
@@ -11,13 +13,41 @@ import (
 // Middleware provides security middleware functions
 type Middleware struct {
 	config *config.Config
+	rateLimiter *RateLimiter
+}
+
+// RateLimiter provides simple in-memory rate limiting
+type RateLimiter struct {
+	mu       sync.RWMutex
+	clients  map[string]*ClientInfo
+	cleanup  time.Duration
+}
+
+// ClientInfo tracks request information for a client
+type ClientInfo struct {
+	requests []time.Time
+	lastSeen time.Time
 }
 
 // New creates a new security middleware instance
 func New(cfg *config.Config) *Middleware {
 	return &Middleware{
 		config: cfg,
+		rateLimiter: NewRateLimiter(),
 	}
+}
+
+// NewRateLimiter creates a new rate limiter
+func NewRateLimiter() *RateLimiter {
+	rl := &RateLimiter{
+		clients: make(map[string]*ClientInfo),
+		cleanup: 5 * time.Minute,
+	}
+	
+	// Start cleanup goroutine
+	go rl.cleanupRoutine()
+	
+	return rl
 }
 
 // IPAllowlistMiddleware checks if the request IP is in the allowlist
@@ -104,10 +134,74 @@ func (m *Middleware) matchesIPOrCIDR(clientIP, allowedIP string) bool {
 	return clientIP == allowedIP
 }
 
-// RateLimitMiddleware provides basic rate limiting (placeholder for future implementation)
+// RateLimitMiddleware provides rate limiting for log viewing
+// Allows 30 requests per minute per IP (reasonable for human log viewing)
 func (m *Middleware) RateLimitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Implement rate limiting if needed
+		clientIP := getClientIP(r)
+		
+		if !m.rateLimiter.Allow(clientIP, 30, time.Minute) {
+			http.Error(w, "Rate limit exceeded. Please wait before making more requests.", http.StatusTooManyRequests)
+			return
+		}
+		
 		next(w, r)
+	}
+}
+
+// Allow checks if a client is allowed to make a request
+func (rl *RateLimiter) Allow(clientIP string, maxRequests int, window time.Duration) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	
+	now := time.Now()
+	client, exists := rl.clients[clientIP]
+	
+	if !exists {
+		client = &ClientInfo{
+			requests: make([]time.Time, 0),
+			lastSeen: now,
+		}
+		rl.clients[clientIP] = client
+	}
+	
+	client.lastSeen = now
+	
+	// Remove old requests outside the window
+	cutoff := now.Add(-window)
+	validRequests := make([]time.Time, 0)
+	for _, reqTime := range client.requests {
+		if reqTime.After(cutoff) {
+			validRequests = append(validRequests, reqTime)
+		}
+	}
+	client.requests = validRequests
+	
+	// Check if under limit
+	if len(client.requests) >= maxRequests {
+		return false
+	}
+	
+	// Add current request
+	client.requests = append(client.requests, now)
+	return true
+}
+
+// cleanupRoutine removes old client entries
+func (rl *RateLimiter) cleanupRoutine() {
+	ticker := time.NewTicker(rl.cleanup)
+	defer ticker.Stop()
+	
+	for range ticker.C {
+		rl.mu.Lock()
+		now := time.Now()
+		cutoff := now.Add(-2 * time.Hour) // Remove clients not seen for 2 hours
+		
+		for ip, client := range rl.clients {
+			if client.lastSeen.Before(cutoff) {
+				delete(rl.clients, ip)
+			}
+		}
+		rl.mu.Unlock()
 	}
 }
