@@ -129,6 +129,45 @@ curl -X POST "http://localhost:3000/deploy?repo=octocat/Hello-World&branch=main&
 }
 ```
 
+### Log Viewer
+
+**GET /logs**
+
+Provides a web-based log viewer interface for monitoring deployment logs and system activity.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `limit` (optional): Number of log lines to display (10, 20, 50, 100, 200). Defaults to 50.
+
+**Example Request:**
+```bash
+curl "http://localhost:3000/logs?limit=100" \
+  -H "Authorization: Bearer your_api_key"
+```
+
+**Response:**
+Returns an HTML page with:
+- Interactive log viewer with dark theme
+- Dropdown to select number of lines (10, 20, 50, 100, 200)
+- Refresh button for manual updates
+- Auto-refresh every 30 seconds
+- Syntax highlighting for different log levels
+- Responsive design for mobile and desktop
+
+**Features:**
+- Real-time log monitoring
+- Configurable line limits
+- Color-coded log levels (ERROR, INFO, SUCCESS, WARNING)
+- Timestamp highlighting
+- Scrollable log container
+- Auto-refresh functionality
+
+**Security:**
+- Requires API key authentication
+- Respects IP allowlist configuration
+- Read-only access to log files
+
 ### GitHub Webhook
 
 **POST /webhook**

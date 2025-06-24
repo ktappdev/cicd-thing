@@ -22,6 +22,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 - **📱 Multiple Projects**: Handle many websites/apps from one tool
 - **🎯 Smart**: Only deploys from specific branches (like `main`)
 - **🔍 Transparent**: See exactly what's happening with detailed logs
+- **📋 Web Log Viewer**: Real-time log monitoring with project identification and dark theme
 - **⚙️ Flexible Configuration**: TOML-based config with multiple location support
 
 ## How It Works 🔄
@@ -254,6 +255,12 @@ The tool provides several web endpoints you can use:
 - **How to use:** Visit `http://your-server:3000/status` in your browser
 - **What you'll see:** List of configured repositories and deployment settings
 
+### 📋 `/logs` - Log Viewer
+- **What it does:** Displays real-time deployment and system logs with project identification
+- **How to use:** Visit `http://your-server:3000/logs?limit=50` in your browser
+- **Authentication:** Requires API key (add `?api_key=your-key` to URL)
+- **What you'll see:** Color-coded logs with project prefixes, configurable line limits, and auto-refresh
+
 ## Usage Examples
 
 ### Basic Deployment Flow
@@ -358,6 +365,40 @@ All deployment events are logged to the configured log file and stdout:
 2025-06-24T10:15:00Z | Hello-World | main | 1481a2de | STARTED
 2025-06-24T10:15:10Z | Hello-World | main | 1481a2de | SUCCESS | 10s
 2025-06-24T10:16:00Z | api | main | 2592b3ef | FAILED | 5s | error: build failed
+```
+
+**Log Format:**
+- **Deployment logs:** `timestamp | repository | branch | commit | status | duration | error`
+- **System logs:** `timestamp | level | message`
+- **Web viewer adds project prefixes:** `[project-name]` or `[SYSTEM]` for easy identification
+
+### Web Log Viewer
+
+Access real-time logs through the web interface at `/logs`:
+
+```bash
+# View logs in your browser
+http://localhost:3000/logs?limit=50
+```
+
+**Features:**
+- 🏷️ **Project identification** - Each log line shows which project it belongs to:
+  - `[my-app]` for deployment logs from specific repositories
+  - `[SYSTEM]` for general server messages
+  - `[UNKNOWN]` for unrecognized log formats
+- 🎨 **Dark theme** optimized for log viewing
+- 📊 **Configurable limits** (10, 20, 50, 100, 200 lines)
+- 🔄 **Auto-refresh** every 30 seconds
+- 🎯 **Manual refresh** button
+- 🌈 **Color-coded** log levels (ERROR, INFO, SUCCESS, WARNING)
+- 📱 **Mobile-friendly** responsive design
+- 🔒 **Secure** - requires API key authentication
+
+**Example log output:**
+```
+[SYSTEM] 2025-06-24T11:26:30-04:00 | INFO | Server initialized
+[my-app] 2025-06-24T11:26:30-04:00 | my-app | main | abc123 | SUCCESS | 2.5s
+[api-service] 2025-06-24T11:26:31-04:00 | api-service | develop | def456 | FAILED | error: build failed
 ```
 
 ### Health Monitoring
