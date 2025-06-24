@@ -11,20 +11,23 @@ import (
 	"strings"
 
 	"github.com/ktappdev/cicd-thing/internal/config"
+	"github.com/ktappdev/cicd-thing/internal/deployment"
 	"github.com/ktappdev/cicd-thing/internal/mapping"
 )
 
 // Handler handles GitHub webhook requests
 type Handler struct {
-	config *config.Config
-	mapper *mapping.Mapper
+	config   *config.Config
+	mapper   *mapping.Mapper
+	executor *deployment.Executor
 }
 
 // New creates a new webhook handler
-func New(cfg *config.Config) *Handler {
+func New(cfg *config.Config, executor *deployment.Executor) *Handler {
 	return &Handler{
-		config: cfg,
-		mapper: mapping.New(cfg),
+		config:   cfg,
+		mapper:   mapping.New(cfg),
+		executor: executor,
 	}
 }
 
@@ -79,11 +82,26 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Trigger deployment
-	// This will be implemented in the deployment package
+	// Convert to deployment request and trigger deployment
+	depReq := &deployment.Request{
+		Repository: deploymentReq.Repository,
+		Branch:     deploymentReq.Branch,
+		Commit:     deploymentReq.Commit,
+		Message:    deploymentReq.Message,
+		Author:     deploymentReq.Author,
+		Timestamp:  deploymentReq.Timestamp,
+		LocalPath:  deploymentReq.LocalPath,
+		Manual:     false,
+	}
+
+	// Trigger deployment
+	if err := h.executor.Deploy(depReq); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to trigger deployment: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Webhook processed successfully"))
+	w.Write([]byte("Deployment triggered successfully"))
 }
 
 // verifySignature verifies the GitHub webhook signature

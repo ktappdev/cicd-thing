@@ -74,11 +74,16 @@ func (e *Executor) GetResults() <-chan *Result {
 	return e.results
 }
 
+// GetLocalPath returns the local path for a repository
+func (e *Executor) GetLocalPath(repository string) (string, error) {
+	return e.mapper.GetLocalPath(repository)
+}
+
 // worker processes deployment requests from the queue
 func (e *Executor) worker() {
 	for req := range e.queue {
 		result := e.executeDeployment(req)
-		
+
 		// Send result to results channel
 		select {
 		case e.results <- result:
@@ -92,7 +97,7 @@ func (e *Executor) worker() {
 // executeDeployment executes a single deployment
 func (e *Executor) executeDeployment(req *Request) *Result {
 	appName := e.mapper.GetAppName(req.Repository)
-	
+
 	// Acquire lock
 	if !e.acquireLock(appName, req.ID) {
 		return &Result{
@@ -131,7 +136,7 @@ func (e *Executor) executeDeployment(req *Request) *Result {
 // runCommands executes the deployment commands
 func (e *Executor) runCommands(ctx context.Context, req *Request, result *Result) *Result {
 	var output strings.Builder
-	
+
 	for i, command := range req.Commands {
 		select {
 		case <-ctx.Done():
@@ -156,12 +161,12 @@ func (e *Executor) runCommands(ctx context.Context, req *Request, result *Result
 			result.Error = fmt.Sprintf("Command failed: %s - %v", command, err)
 			result.ExitCode = cmd.ProcessState.ExitCode()
 			result.Output = output.String()
-			
+
 			// Attempt rollback if configured
 			if e.shouldRollback(req.Repository) {
 				e.performRollback(req, result)
 			}
-			
+
 			return result
 		}
 	}
@@ -174,7 +179,7 @@ func (e *Executor) runCommands(ctx context.Context, req *Request, result *Result
 // prepareCommands prepares the commands for deployment
 func (e *Executor) prepareCommands(req *Request) error {
 	appName := e.mapper.GetAppName(req.Repository)
-	
+
 	// Check for app-specific commands
 	if commands, exists := e.config.Commands[appName]; exists {
 		req.Commands = parseCommands(commands)
@@ -214,11 +219,11 @@ func (e *Executor) isLocked(appName string) bool {
 func (e *Executor) acquireLock(appName, requestID string) bool {
 	e.lockMutex.Lock()
 	defer e.lockMutex.Unlock()
-	
+
 	if _, exists := e.locks[appName]; exists {
 		return false
 	}
-	
+
 	e.locks[appName] = &Lock{
 		AppName:   appName,
 		StartTime: time.Now(),
