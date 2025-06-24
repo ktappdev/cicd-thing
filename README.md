@@ -1,162 +1,179 @@
-# CI/CD Thing - Go-Based GitHub Webhook Deployment Orchestrator
+# CI/CD Thing - Automatic Website & App Deployment
 
-A robust, production-ready deployment orchestrator in Go that listens for GitHub webhook events and executes configurable deployment commands.
+🚀 **Automatically deploy your websites and applications when you push code to GitHub!**
 
-## Features
+This tool watches your GitHub repositories and automatically deploys your code to your server whenever you make changes. No more manual deployments - just push your code and it goes live!
 
-- **Webhook Listener**: Receives and processes GitHub webhook events
-- **Repository Mapping**: Maps GitHub repositories to local folders
-- **Configurable Commands**: Per-app deployment commands with fallbacks
-- **Security**: Webhook secret verification and IP allowlisting
-- **Concurrency Control**: Per-app queuing and deployment locking
-- **Timeout Handling**: Configurable timeouts for deployments
-- **Rollback Support**: Automatic rollback on deployment failure
-- **Manual API**: Authenticated endpoint for manual deployments
-- **Comprehensive Logging**: Detailed deployment event tracking
-- **Health Monitoring**: Health check endpoints
-- **Branch Filtering**: Deploy only from specified branches
-- **Dry Run Mode**: Test configurations without execution
+## What Does This Do? 🤔
 
-## Project Structure
+Imagine you have a website or app on GitHub. Every time you make changes and push them to GitHub, this tool will:
+
+1. **🔔 Notice the changes** - Gets notified instantly when you push code
+2. **📥 Download the latest code** - Pulls your changes to your server
+3. **🔨 Build your project** - Runs commands like installing dependencies and building
+4. **🚀 Deploy it live** - Restarts your website/app with the new code
+5. **📊 Tell you what happened** - Logs everything and can send notifications
+
+## Why Use This? ✨
+
+- **⚡ Instant Deployments**: Your changes go live seconds after you push to GitHub
+- **🔒 Secure**: Only deploys when GitHub sends the correct secret key
+- **🛡️ Safe**: Can automatically undo deployments if something goes wrong
+- **📱 Multiple Projects**: Handle many websites/apps from one tool
+- **🎯 Smart**: Only deploys from specific branches (like `main`)
+- **🔍 Transparent**: See exactly what's happening with detailed logs
+
+## How It Works 🔄
 
 ```
-cicd-thing/
-├── main.go                    # Application entry point
-├── cmd/
-│   └── deployer/             # Alternative entry points
-├── internal/
-│   ├── config/               # Configuration management
-│   ├── server/               # HTTP server and routing
-│   ├── webhook/              # GitHub webhook handling
-│   ├── deployment/           # Deployment execution engine
-│   ├── logger/               # Logging system
-│   └── security/             # Security features
-├── .env.example              # Example configuration
-└── README.md                 # This file
+1. You push code to GitHub
+         ↓
+2. GitHub sends a notification to this tool
+         ↓
+3. Tool downloads your latest code
+         ↓
+4. Tool runs your build commands (install, build, etc.)
+         ↓
+5. Tool restarts your website/app
+         ↓
+6. Your changes are now live! 🎉
 ```
 
-## Quick Start
+**If something goes wrong:** The tool can automatically undo the deployment and restore the previous version.
 
-1. **Clone and Setup**
-   ```bash
-   git clone <your-repo>
-   cd cicd-thing
-   go mod tidy
-   ```
+## Quick Start Guide 🚀
 
-2. **Configure Environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your settings
-   ```
-
-3. **Start the Server**
-   ```bash
-   go run main.go
-   # Or build and run
-   go build -o cicd-thing .
-   ./cicd-thing
-   ```
-
-4. **Configure GitHub Webhooks**
-   - Go to your repository settings
-   - Add webhook pointing to `http://your-server:3000/webhook`
-   - Set content type to `application/json`
-   - Add your webhook secret
-   - Select "Push events"
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Server port | `3000` | No |
-| `WEBHOOK_SECRET` | GitHub webhook secret | - | Yes |
-| `API_KEY` | API authentication key | - | Yes |
-| `LOG_FILE` | Log file path | `/var/log/deployer.log` | No |
-| `REPO_MAP` | Repository mappings | - | Yes |
-| `DEFAULT_COMMANDS` | Default deployment commands | `git pull && npm ci && npm run build` | No |
-| `BRANCH_FILTER` | Branch to deploy | `main` | No |
-| `CONCURRENCY_LIMIT` | Max concurrent deployments | `2` | No |
-| `TIMEOUT_SECONDS` | Deployment timeout | `300` | No |
-| `DRY_RUN` | Test mode | `false` | No |
-
-### Repository Mapping
-
-Format: `repo1:path1,repo2:path2`
-
-Example:
-```
-REPO_MAP=octocat/Hello-World:~/projects/hello-world,myorg/api:~/apps/api
-```
-
-### Per-App Commands
-
-Format: `COMMANDS_<app-name>=<command>`
-
-Example:
-```
-COMMANDS_Hello-World=git pull && npm ci && npm run build && pm2 restart hello-world
-COMMANDS_api=git pull && go build && systemctl restart api
-```
-
-### Rollback Commands
-
-Format: `ROLLBACK_COMMANDS_<app-name>=<command>`
-
-Example:
-```
-ROLLBACK_COMMANDS_Hello-World=git reset --hard HEAD~1 && pm2 restart hello-world
-```
-
-## API Endpoints
-
-### `POST /webhook`
-GitHub webhook receiver. Automatically triggered by GitHub.
-
-**Headers:**
-- `X-Hub-Signature-256`: GitHub signature
-- `X-GitHub-Event`: Event type (must be "push")
-
-### `POST /deploy`
-Manual deployment trigger.
-
-**Authentication:** Bearer token required
+### Step 1: Download and Setup
 ```bash
-curl -X POST "http://localhost:3000/deploy?repo=octocat/Hello-World&branch=main" \
-  -H "Authorization: Bearer your_api_key"
+# Download the code
+git clone <your-repo>
+cd cicd-thing
+
+# Install dependencies
+go mod tidy
 ```
 
-**Query Parameters:**
-- `repo` (required): Repository full name
-- `branch` (optional): Branch to deploy (defaults to configured branch filter)
-- `commit` (optional): Commit hash (defaults to "HEAD")
+### Step 2: Configure Your Settings
+```bash
+# Copy the example configuration
+cp .env.example .env
 
-### `GET /health`
-Health check endpoint with system information.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "service": "cicd-thing",
-  "version": "1.0.0",
-  "config": {
-    "port": "3000",
-    "concurrency_limit": 2,
-    "repositories": 2
-  },
-  "features": {
-    "webhook_listener": true,
-    "manual_deployment": true,
-    "rollback_support": true
-  }
-}
+# Edit the .env file with your settings (see Configuration section below)
+nano .env  # or use any text editor
 ```
 
-### `GET /status`
-Deployment status and configuration information.
+### Step 3: Start the Tool
+```bash
+# Option 1: Run directly
+go run main.go
+
+# Option 2: Build and run (recommended for production)
+go build -o cicd-thing .
+./cicd-thing
+```
+
+### Step 4: Connect to GitHub
+1. Go to your GitHub repository
+2. Click **Settings** → **Webhooks** → **Add webhook**
+3. Set **Payload URL** to: `http://your-server:3000/webhook`
+4. Set **Content type** to: `application/json`
+5. Set **Secret** to the same value as `WEBHOOK_SECRET` in your .env file
+6. Select **Just the push event**
+7. Click **Add webhook**
+
+🎉 **That's it!** Now when you push code to GitHub, it will automatically deploy!
+
+## 📚 Documentation for Everyone
+
+- **📖 [Getting Started Guide](GETTING_STARTED.md)** - Step-by-step setup for beginners
+- **❓ [FAQ](FAQ.md)** - Common questions and answers
+- **🔧 [API Documentation](API.md)** - Technical API reference
+- **💡 [Deployment Examples](DEPLOYMENT_EXAMPLES.md)** - Real-world configuration examples
+
+## Configuration Settings ⚙️
+
+You need to edit the `.env` file to tell the tool about your projects. Here's what each setting means:
+
+### Required Settings (You MUST set these)
+
+| Setting | What It Does | Example |
+|---------|--------------|---------|
+| `WEBHOOK_SECRET` | Secret password GitHub uses to verify it's really GitHub calling | `abc123secret456` |
+| `API_KEY` | Password for manually triggering deployments | `myapikey789` |
+| `REPO_MAP` | Which GitHub repos go to which folders on your server | `myuser/website:~/mysite` |
+
+### Optional Settings (Have good defaults)
+
+| Setting | What It Does | Default | Example |
+|---------|--------------|---------|---------|
+| `PORT` | What port the tool runs on | `3000` | `8080` |
+| `BRANCH_FILTER` | Only deploy from this branch | `main` | `production` |
+| `TIMEOUT_SECONDS` | How long to wait before giving up | `300` (5 minutes) | `600` |
+| `DRY_RUN` | Test mode (doesn't actually deploy) | `false` | `true` |
+
+### 📁 Repository Mapping (Which GitHub repos go where)
+
+Tell the tool which GitHub repository goes to which folder on your server:
+
+```bash
+# Format: github-user/repo-name:path-on-your-server
+REPO_MAP=johndoe/my-website:~/websites/my-website
+
+# Multiple projects:
+REPO_MAP=johndoe/website:~/sites/website,johndoe/api:~/apps/api
+```
+
+### 🔨 Deployment Commands (What to do when deploying)
+
+Tell the tool what commands to run when deploying each project:
+
+```bash
+# For a Node.js website:
+COMMANDS_my-website=git pull && npm install && npm run build && pm2 restart my-website
+
+# For a simple HTML site:
+COMMANDS_my-site=git pull && rsync -av ./ /var/www/html/
+
+# For a Python app:
+COMMANDS_my-app=git pull && pip install -r requirements.txt && systemctl restart my-app
+```
+
+### 🔄 Rollback Commands (What to do if deployment fails)
+
+If something goes wrong, these commands will undo the deployment:
+
+```bash
+# Go back to previous version and restart:
+ROLLBACK_COMMANDS_my-website=git reset --hard HEAD~1 && npm run build && pm2 restart my-website
+```
+
+## Available Endpoints 🌐
+
+The tool provides several web endpoints you can use:
+
+### 🔔 `/webhook` - GitHub Notifications
+- **What it does:** Receives notifications from GitHub when you push code
+- **Who uses it:** GitHub automatically calls this when you push code
+- **You don't need to worry about this** - it's automatic!
+
+### 🚀 `/deploy` - Manual Deployment
+- **What it does:** Lets you trigger a deployment manually
+- **How to use:**
+  ```bash
+  curl -X POST "http://your-server:3000/deploy?repo=username/repository" \
+    -H "Authorization: Bearer your-api-key"
+  ```
+- **When to use:** When you want to deploy without pushing to GitHub
+
+### ❤️ `/health` - Check if Tool is Working
+- **What it does:** Shows if the tool is running properly
+- **How to use:** Visit `http://your-server:3000/health` in your browser
+- **What you'll see:** Information about the tool's status and configuration
+
+### 📊 `/status` - Deployment Information
+- **What it does:** Shows current deployment status and configuration
+- **How to use:** Visit `http://your-server:3000/status` in your browser
+- **What you'll see:** List of configured repositories and deployment settings
 
 ## Usage Examples
 
