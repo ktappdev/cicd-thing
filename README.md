@@ -135,10 +135,10 @@ port = "3000"
 webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED
 api_key = "YOUR_API_KEY_HERE"                # REQUIRED
 
-# Repository mappings - REQUIRED
+# Repository mappings - REQUIRED (use full GitHub repo names)
 [repositories]
-"my-app" = "/var/www/my-app"
-"api-service" = "/opt/api-service"
+"johndoe/my-app" = "/var/www/my-app"
+"company/api-service" = "/opt/api-service"
 ```
 
 | Setting | What It Does | Example |
@@ -259,7 +259,7 @@ The tool provides several web endpoints you can use:
 - **What it does:** Displays real-time deployment and system logs with project identification
 - **How to use:** Visit `http://your-server:3000/logs?limit=50` in your browser
 - **Rate limiting:** Limited to 30 requests per minute per IP address for optimal performance
-- **What you'll see:** Color-coded logs with project prefixes, configurable line limits, and auto-refresh
+- **What you'll see:** Project-prefixed logs with configurable line limits and auto-refresh
 
 ## Usage Examples
 
@@ -390,7 +390,7 @@ http://localhost:3000/logs?limit=50
 - 📊 **Configurable limits** (10, 20, 50, 100, 200 lines)
 - 🔄 **Auto-refresh** every 30 seconds
 - 🎯 **Manual refresh** button
-- 🌈 **Color-coded** log levels (ERROR, INFO, SUCCESS, WARNING)
+- 🧾 **Textual level/status tags** (e.g., INFO, ERROR where applicable)
 - 📱 **Mobile-friendly** responsive design
 - 🔒 **Secure** - rate limited to prevent abuse (30 requests/minute per IP)
 
