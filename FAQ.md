@@ -142,8 +142,6 @@ Yes, but you might need to increase the `TIMEOUT_SECONDS` setting for projects t
 
 ## Advanced Usage
 
-### Can I get notifications when deployments happen?
-Yes! The tool supports notifications to Slack, email, or custom webhooks. Check the configuration documentation for setup details.
 
 ### Can I roll back failed deployments?
 Yes! Set up `ROLLBACK_COMMANDS` for each project:

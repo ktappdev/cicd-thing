@@ -1,3 +1,4 @@
+// Package config holds all configuration for the deployment orchestrator
 package config
 
 import (
@@ -12,12 +13,14 @@ import (
 // Config holds all configuration for the deployment orchestrator
 type Config struct {
 	// Server settings
-	Port         string `toml:"port"`
+	Port          string `toml:"port"`
 	WebhookSecret string `toml:"webhook_secret"`
-	APIKey       string `toml:"api_key"`
+	APIKey        string `toml:"api_key"`
 
 	// Logging
-	LogFile string `toml:"log_file"`
+	LogFile           string `toml:"log_file"`
+	MaxLogSizeMB      int    `toml:"max_log_size_mb"`      // Max log file size before rotation (MB)
+	MaxRotatedLogs    int    `toml:"max_rotated_logs"`     // Number of rotated logs to keep
 
 	// Repository mappings (repo -> local path)
 	RepoMap map[string]string `toml:"repositories"`
@@ -37,9 +40,6 @@ type Config struct {
 	TimeoutSeconds   int           `toml:"timeout_seconds"`
 	Timeout          time.Duration `toml:"-"` // Computed field
 
-	// Notifications
-	NotifyOnRollback bool `toml:"notify_on_rollback"`
-
 	// Security
 	IPAllowlist []string `toml:"ip_allowlist"`
 
@@ -53,11 +53,12 @@ func Load() (*Config, error) {
 		// Set defaults
 		Port:             "3000",
 		LogFile:          "./deployer.log",
+		MaxLogSizeMB:     10,   // 10MB default
+		MaxRotatedLogs:   5,    // Keep 5 rotated logs
 		DefaultCommands:  "git pull && npm ci && npm run build",
 		BranchFilter:     "main",
 		ConcurrencyLimit: 2,
 		TimeoutSeconds:   300,
-		NotifyOnRollback: false,
 		DryRun:           false,
 	}
 
@@ -87,9 +88,9 @@ func Load() (*Config, error) {
 func findConfigFile() (string, error) {
 	// Define search paths in order of preference
 	searchPaths := []string{
-		"./config.toml",                    // Current directory
-		"./config/config.toml",             // Local config directory
-		"/etc/cicd-thing/config.toml",       // System-wide config
+		"./config.toml",                         // Current directory
+		"./config/config.toml",                  // Local config directory
+		"/etc/cicd-thing/config.toml",           // System-wide config
 		"/usr/local/etc/cicd-thing/config.toml", // Alternative system config
 	}
 
@@ -128,7 +129,7 @@ func findConfigFile() (string, error) {
 func createDefaultConfig(path string) error {
 	// Ensure directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -142,6 +143,8 @@ api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
 
 # Logging
 log_file = "./deployer.log"
+max_log_size_mb = 10      # Rotate log when it reaches this size (MB)
+max_rotated_logs = 5      # Keep this many rotated log files
 
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
@@ -152,9 +155,6 @@ branch_filter = "main"
 # Performance settings
 concurrency_limit = 2
 timeout_seconds = 300
-
-# Notifications
-notify_on_rollback = false
 
 # Features
 dry_run = false
@@ -179,7 +179,7 @@ dry_run = false
 # "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
 `
 
-	return os.WriteFile(path, []byte(defaultConfig), 0644)
+	return os.WriteFile(path, []byte(defaultConfig), 0o644)
 }
 
 // validate checks that required configuration is present

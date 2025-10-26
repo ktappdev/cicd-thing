@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -107,11 +108,85 @@ func (l *Logger) LogManualTrigger(repository, branch, commit string) {
 	l.LogDeploymentEvent(event)
 }
 
+// checkLogRotation checks if the log file needs rotation and performs it if necessary
+func (l *Logger) checkLogRotation() error {
+	// Get current file size
+	stat, err := l.file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to get log file stats: %w", err)
+	}
+
+	// Check if file size exceeds limit (convert MB to bytes)
+	maxSize := int64(l.config.MaxLogSizeMB) * 1024 * 1024
+	if stat.Size() < maxSize {
+		return nil // No rotation needed
+	}
+
+	// Need to rotate the log file
+	l.rotateLog()
+	return nil
+}
+
+// rotateLog performs the actual log rotation
+func (l *Logger) rotateLog() {
+	// Close current log file
+	l.file.Close()
+
+	// Remove oldest log if we have too many
+	if l.config.MaxRotatedLogs > 0 {
+		oldestLog := l.config.LogFile + "." + strconv.Itoa(l.config.MaxRotatedLogs)
+		os.Remove(oldestLog) // Ignore error, file might not exist
+	}
+
+	// Shift existing logs (rename log.5 -> log.6, log.4 -> log.5, etc.)
+	for i := l.config.MaxRotatedLogs - 1; i >= 1; i-- {
+		oldLog := l.config.LogFile + "." + strconv.Itoa(i)
+		newLog := l.config.LogFile + "." + strconv.Itoa(i+1)
+		os.Rename(oldLog, newLog) // Ignore error, file might not exist
+	}
+
+	// Move current log to log.1
+	os.Rename(l.config.LogFile, l.config.LogFile+".1")
+
+	// Create new log file
+	newFile, err := os.OpenFile(l.config.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		// Fallback: try to create a new log file with timestamp
+		timestamp := time.Now().Format("20060102-150405")
+		fallbackLog := l.config.LogFile + "." + timestamp
+		newFile, err = os.OpenFile(fallbackLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			// Last resort: log to stdout only
+			l.file = nil
+			multiWriter := io.MultiWriter(os.Stdout)
+			l.logger = log.New(multiWriter, "", 0)
+			return
+		}
+	}
+
+	// Update the logger with new file
+	l.file = newFile
+	multiWriter := io.MultiWriter(newFile, os.Stdout)
+	l.logger = log.New(multiWriter, "", 0)
+
+	// Log the rotation event
+	l.logger.Printf("%s | INFO | Log rotated (old log saved as %s.1)",
+		time.Now().Format(time.RFC3339), l.config.LogFile)
+}
+
 // LogError logs a general error
 func (l *Logger) LogError(message string, err error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
-	
+
+	// Check if log rotation is needed
+	if l.file != nil {
+		if rotationErr := l.checkLogRotation(); rotationErr != nil {
+			// If rotation fails, log the error but continue
+			fmt.Printf("Log rotation failed: %v\n", rotationErr)
+		}
+	}
+
 	timestamp := time.Now().Format(time.RFC3339)
 	if err != nil {
 		l.logger.Printf("%s | ERROR | %s: %v", timestamp, message, err)
@@ -124,7 +199,15 @@ func (l *Logger) LogError(message string, err error) {
 func (l *Logger) LogInfo(message string) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
-	
+
+	// Check if log rotation is needed
+	if l.file != nil {
+		if rotationErr := l.checkLogRotation(); rotationErr != nil {
+			// If rotation fails, log the error but continue
+			fmt.Printf("Log rotation failed: %v\n", rotationErr)
+		}
+	}
+
 	timestamp := time.Now().Format(time.RFC3339)
 	l.logger.Printf("%s | INFO | %s", timestamp, message)
 }
@@ -153,6 +236,14 @@ func (l *Logger) processEvents() {
 func (l *Logger) logEventDirect(event *deployment.Event) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
+
+	// Check if log rotation is needed
+	if l.file != nil {
+		if rotationErr := l.checkLogRotation(); rotationErr != nil {
+			// If rotation fails, log the error but continue
+			fmt.Printf("Log rotation failed: %v\n", rotationErr)
+		}
+	}
 
 	// Format: timestamp | repository | branch | commit | status | duration | message
 	timestamp := event.Timestamp.Format(time.RFC3339)

@@ -223,6 +223,5 @@ Once you have it working:
 2. Configure log rotation
 3. Set up monitoring and alerts
 4. Add more repositories
-5. Explore notification options (Slack, email)
 
 **Congratulations!** You now have automatic deployments set up! 🚀

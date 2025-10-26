@@ -1,31 +1,31 @@
-# CICD-Thing 🚀
+# CICD-Thing
 
-🚀 **Automatically deploy your websites and applications when you push code to GitHub!**
+**Automatically deploy your websites and applications when you push code to GitHub!**
 
 This tool watches your GitHub repositories and automatically deploys your code to your server whenever you make changes. No more manual deployments - just push your code and it goes live!
 
-## What Does This Do? 🤔
+## What Does This Do?
 
 Imagine you have a website or app on GitHub. Every time you make changes and push them to GitHub, this tool will:
 
-1. **🔔 Notice the changes** - Gets notified instantly when you push code
-2. **📥 Download the latest code** - Pulls your changes to your server
-3. **🔨 Build your project** - Runs commands like installing dependencies and building
-4. **🚀 Deploy it live** - Restarts your website/app with the new code
-5. **📊 Tell you what happened** - Logs everything and can send notifications
+1. **Notice the changes** - Gets notified instantly when you push code
+2. **Download the latest code** - Pulls your changes to your server
+3. **Build your project** - Runs commands like installing dependencies and building
+4. **Deploy it live** - Restarts your website/app with the new code
+5. **Tell you what happened** - Logs everything with detailed status information
 
-## Why Use This? ✨
+## Why Use This?
 
-- **⚡ Instant Deployments**: Your changes go live seconds after you push to GitHub
-- **🔒 Secure**: Only deploys when GitHub sends the correct secret key
-- **🛡️ Safe**: Can automatically undo deployments if something goes wrong
-- **📱 Multiple Projects**: Handle many websites/apps from one tool
-- **🎯 Smart**: Only deploys from specific branches (like `main`)
-- **🔍 Transparent**: See exactly what's happening with detailed logs
-- **📋 Web Log Viewer**: Real-time log monitoring with project identification and dark theme
-- **⚙️ Flexible Configuration**: TOML-based config with multiple location support
+- **Instant Deployments**: Your changes go live seconds after you push to GitHub
+- **Secure**: Only deploys when GitHub sends the correct secret key
+- **Safe**: Can automatically undo deployments if something goes wrong
+- **Multiple Projects**: Handle many websites/apps from one tool
+- **Smart**: Only deploys from specific branches (like `main`)
+- **Transparent**: See exactly what's happening with detailed logs
+- **Web Log Viewer**: Real-time log monitoring with project identification and dark theme
+- **Flexible Configuration**: TOML-based config with multiple location support
 
-## How It Works 🔄
+## How It Works
 
 ```
 1. You push code to GitHub
@@ -38,21 +38,41 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
          ↓
 5. Tool restarts your website/app
          ↓
-6. Your changes are now live! 🎉
+6. Your changes are now live!
 ```
 
 **If something goes wrong:** The tool can automatically undo the deployment and restore the previous version.
 
-## Quick Start Guide 🚀
+## Quick Start Guide
 
-### Step 1: Download and Setup
+### Step 1: Install CICD-Thing
+
+**Option A: Install with go install (Recommended - Easiest)**
+```bash
+# Install directly from GitHub (no cloning needed)
+go install github.com/ktappdev/cicd-thing@latest
+
+# Make sure Go's bin directory is in your PATH
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# Run the application
+cicd-thing
+```
+
+**Option B: Install from Source**
 ```bash
 # Download the code
-git clone <your-repo>
+git clone https://github.com/ktappdev/cicd-thing.git
 cd cicd-thing
 
 # Install dependencies
 go mod tidy
+
+# Build the application
+go build -o cicd-thing .
+
+# Run the application
+./cicd-thing
 ```
 
 ### Step 2: Configure Your Settings
@@ -60,11 +80,9 @@ go mod tidy
 The application uses TOML configuration files and will automatically create one for you!
 
 ```bash
-# Build the application
-go build -o cicd-thing .
-
 # Run it once to create the default config
-./cicd-thing
+cicd-thing
+# or if building from source: ./cicd-thing
 ```
 
 The application will create a `config.toml` file and show you what needs to be configured:
@@ -89,7 +107,8 @@ nano config.toml  # or use any text editor
 ### Step 4: Start the Tool
 ```bash
 # Run the application
-./cicd-thing
+cicd-thing
+# or if building from source: ./cicd-thing
 ```
 
 ### Step 5: Connect to GitHub
@@ -101,9 +120,9 @@ nano config.toml  # or use any text editor
 6. Select **Just the push event**
 7. Click **Add webhook**
 
-🎉 **That's it!** Now when you push code to GitHub, it will automatically deploy!
+**That's it!** Now when you push code to GitHub, it will automatically deploy!
 
-## Configuration System ⚙️
+## Configuration System
 
 ### Configuration File Locations
 
@@ -152,6 +171,8 @@ api_key = "YOUR_API_KEY_HERE"                # REQUIRED
 ```toml
 # Logging
 log_file = "./deployer.log"
+max_log_size_mb = 10      # Rotate log when it reaches this size (MB)
+max_rotated_logs = 5      # Keep this many rotated log files
 
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
@@ -163,9 +184,6 @@ branch_filter = "main"
 concurrency_limit = 2
 timeout_seconds = 300
 
-# Notifications
-notify_on_rollback = false
-
 # Features
 dry_run = false
 
@@ -175,12 +193,15 @@ ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
 
 | Setting | What It Does | Default | Example |
 |---------|--------------|---------|----------|
+| `log_file` | Path to the log file | `./deployer.log` | `/var/log/cicd-thing.log` |
+| `max_log_size_mb` | Rotate log when it reaches this size (MB) | `10` | `50` |
+| `max_rotated_logs` | Number of rotated log files to keep | `5` | `10` |
 | `port` | What port the tool runs on | `3000` | `8080` |
 | `branch_filter` | Only deploy from this branch | `main` | `production` |
 | `timeout_seconds` | How long to wait before giving up | `300` (5 minutes) | `600` |
 | `dry_run` | Test mode (doesn't actually deploy) | `false` | `true` |
 
-### 📁 Repository Mapping (Which GitHub repos go where)
+### Repository Mapping (Which GitHub repos go where)
 
 Tell the tool which GitHub repository goes to which folder on your server:
 
@@ -191,7 +212,7 @@ Tell the tool which GitHub repository goes to which folder on your server:
 "company/frontend" = "/var/www/frontend"
 ```
 
-### 🔨 Deployment Commands (What to do when deploying)
+### Deployment Commands (What to do when deploying)
 
 Tell the tool what commands to run when deploying each project:
 
@@ -210,7 +231,7 @@ Tell the tool what commands to run when deploying each project:
 "api-service" = "git pull && go build -o api . && systemctl restart api"
 ```
 
-### 🔄 Rollback Commands (What to do if deployment fails)
+### Rollback Commands (What to do if deployment fails)
 
 If something goes wrong, these commands will undo the deployment:
 
@@ -220,23 +241,23 @@ If something goes wrong, these commands will undo the deployment:
 "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
 ```
 
-## 📚 Documentation for Everyone
+## Documentation for Everyone
 
-- **📖 [Getting Started Guide](GETTING_STARTED.md)** - Step-by-step setup for beginners
-- **❓ [FAQ](FAQ.md)** - Common questions and answers
-- **🔧 [API Documentation](API.md)** - Technical API reference
-- **💡 [Deployment Examples](DEPLOYMENT_EXAMPLES.md)** - Real-world configuration examples
+- **[Getting Started Guide](GETTING_STARTED.md)** - Step-by-step setup for beginners
+- **[FAQ](FAQ.md)** - Common questions and answers
+- **[API Documentation](API.md)** - Technical API reference
+- **[Deployment Examples](DEPLOYMENT_EXAMPLES.md)** - Real-world configuration examples
 
-## Available Endpoints 🌐
+## Available Endpoints
 
 The tool provides several web endpoints you can use:
 
-### 🔔 `/webhook` - GitHub Notifications
-- **What it does:** Receives notifications from GitHub when you push code
+### `/webhook` - GitHub Notifications
+- **What it does:** Receives webhook notifications from GitHub when you push code
 - **Who uses it:** GitHub automatically calls this when you push code
 - **You don't need to worry about this** - it's automatic!
 
-### 🚀 `/deploy` - Manual Deployment
+### `/deploy` - Manual Deployment
 - **What it does:** Lets you trigger a deployment manually
 - **How to use:**
   ```bash
@@ -245,17 +266,17 @@ The tool provides several web endpoints you can use:
   ```
 - **When to use:** When you want to deploy without pushing to GitHub
 
-### ❤️ `/health` - Check if Tool is Working
+### `/health` - Check if Tool is Working
 - **What it does:** Shows if the tool is running properly
 - **How to use:** Visit `http://your-server:3000/health` in your browser
 - **What you'll see:** Information about the tool's status and configuration
 
-### 📊 `/status` - Deployment Information
+### `/status` - Deployment Information
 - **What it does:** Shows current deployment status and configuration
 - **How to use:** Visit `http://your-server:3000/status` in your browser
 - **What you'll see:** List of configured repositories and deployment settings
 
-### 📋 `/logs` - Log Viewer
+### `/logs` - Log Viewer
 - **What it does:** Displays real-time deployment and system logs with project identification
 - **How to use:** Visit `http://your-server:3000/logs?limit=50` in your browser
 - **Rate limiting:** Limited to 30 requests per minute per IP address for optimal performance
@@ -312,28 +333,42 @@ The tool provides several web endpoints you can use:
    ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
    ```
 
-## Production Deployment 🏭
+## Production Deployment
 
 ### System-wide Installation
 
-1. **Build the application:**
-   ```bash
-   go build -o cicd-thing .
-   ```
+**Option A: Install with go install (Recommended)**
+```bash
+# Install globally
+go install github.com/ktappdev/cicd-thing@latest
 
-2. **Install to system location:**
+# The binary will be available in ~/go/bin/ or add to PATH:
+sudo cp ~/go/bin/cicd-thing /usr/local/bin/
+```
+
+**Option B: Build from source**
+```bash
+# Clone and build
+git clone https://github.com/ktappdev/cicd-thing.git
+cd cicd-thing
+go build -o cicd-thing .
+
+# Install to system location
+sudo cp cicd-thing /usr/local/bin/
+```
+
+3. **Create system config directory:**
    ```bash
-   sudo cp cicd-thing /usr/local/bin/
    sudo mkdir -p /etc/cicd-thing
    sudo cp config.toml.example /etc/cicd-thing/config.toml
    ```
 
-3. **Configure for production:**
+4. **Configure for production:**
    ```bash
    sudo nano /etc/cicd-thing/config.toml
    ```
 
-4. **Create systemd service (optional):**
+5. **Create systemd service (optional):**
    ```bash
    sudo tee /etc/systemd/system/cicd-thing.service > /dev/null <<EOF
    [Unit]
@@ -382,17 +417,17 @@ http://localhost:3000/logs?limit=50
 ```
 
 **Features:**
-- 🏷️ **Project identification** - Each log line shows which project it belongs to:
+- **Project identification** - Each log line shows which project it belongs to:
   - `[my-app]` for deployment logs from specific repositories
   - `[SYSTEM]` for general server messages
   - `[UNKNOWN]` for unrecognized log formats
-- 🎨 **Dark theme** optimized for log viewing
-- 📊 **Configurable limits** (10, 20, 50, 100, 200 lines)
-- 🔄 **Auto-refresh** every 30 seconds
-- 🎯 **Manual refresh** button
-- 🧾 **Textual level/status tags** (e.g., INFO, ERROR where applicable)
-- 📱 **Mobile-friendly** responsive design
-- 🔒 **Secure** - rate limited to prevent abuse (30 requests/minute per IP)
+- **Dark theme** optimized for log viewing
+- **Configurable limits** (10, 20, 50, 100, 200 lines)
+- **Auto-refresh** every 30 seconds
+- **Manual refresh** button
+- **Textual level/status tags** (e.g., INFO, ERROR where applicable)
+- **Mobile-friendly** responsive design
+- **Secure** - rate limited to prevent abuse (30 requests/minute per IP)
 
 **Example log output:**
 ```

@@ -79,7 +79,6 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			"manual_deployment": true,
 			"rollback_support":  len(s.config.RollbackCommands) > 0,
 			"ip_allowlist":      len(s.config.IPAllowlist) > 0,
-			"notifications":     s.config.NotifyOnRollback,
 		},
 	}
 
@@ -108,9 +107,10 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"service": "cicd-thing",
 		"status":  "running",
 		"deployments": map[string]interface{}{
-			"active":    0, // Could be enhanced to show actual active deployments
-			"queued":    0, // Could be enhanced to show queue length
-			"completed": 0, // Could be enhanced to show completed count
+			"active":    0, // 🚧 UNDER CONSTRUCTION - Real-time deployment tracking coming soon
+			"queued":    0, // 🚧 UNDER CONSTRUCTION - Queue monitoring coming soon
+			"completed": 0, // 🚧 UNDER CONSTRUCTION - Deployment history coming soon
+			"note":      "Deployment statistics are currently placeholders - real tracking will be added in a future version",
 		},
 		"repositories": s.config.RepoMap,
 		"configuration": map[string]interface{}{

@@ -25,9 +25,6 @@ branch_filter = "main"
 concurrency_limit = 2
 timeout_seconds = 300
 
-# Notifications
-notify_on_rollback = false
-
 # Features
 dry_run = false
 

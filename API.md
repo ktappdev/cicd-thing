@@ -42,7 +42,6 @@ Returns the health status and configuration of the service.
     "manual_deployment": true,
     "rollback_support": true,
     "ip_allowlist": false,
-    "notifications": false
   }
 }
 ```

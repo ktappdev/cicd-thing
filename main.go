@@ -9,7 +9,6 @@ import (
 	"github.com/ktappdev/cicd-thing/internal/config"
 	"github.com/ktappdev/cicd-thing/internal/deployment"
 	"github.com/ktappdev/cicd-thing/internal/logger"
-	"github.com/ktappdev/cicd-thing/internal/notifications"
 	"github.com/ktappdev/cicd-thing/internal/server"
 )
 
@@ -29,16 +28,12 @@ func main() {
 
 	deployLogger.LogInfo("Starting CI/CD Thing deployment orchestrator")
 
-	// Initialize notification system
-	notifier := notifications.New(cfg)
-	deployLogger.LogInfo("Notification system initialized")
-
 	// Initialize deployment executor
 	executor := deployment.New(cfg)
 	deployLogger.LogInfo("Deployment executor initialized")
 
 	// Start deployment result processor
-	go processDeploymentResults(executor, deployLogger, notifier)
+	go processDeploymentResults(executor, deployLogger)
 
 	// Create and start the server
 	srv := server.New(cfg, executor, deployLogger)
@@ -60,12 +55,9 @@ func main() {
 }
 
 // processDeploymentResults processes deployment results and logs them
-func processDeploymentResults(executor *deployment.Executor, deployLogger *logger.Logger, notifier *notifications.Notifier) {
+func processDeploymentResults(executor *deployment.Executor, deployLogger *logger.Logger) {
 	for result := range executor.GetResults() {
 		deployLogger.LogDeploymentResult(result)
-
-		// Send notifications
-		notifier.NotifyDeploymentResult(result)
 
 		// Log additional info based on status
 		switch result.Status {
