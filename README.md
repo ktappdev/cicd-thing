@@ -85,7 +85,7 @@ cicd-thing
 # or if building from source: ./cicd-thing
 ```
 
-The application will create a `config.toml` file and show you what needs to be configured:
+The application will create a `config.toml` file with a **configuration marker** and show you what needs to be configured:
 
 ```
 === CONFIGURATION REQUIRED ===
@@ -99,10 +99,36 @@ Required fields to configure:
 ```
 
 ### Step 3: Edit Your Configuration
+
 ```bash
 # Edit the config file with your settings
 nano config.toml  # or use any text editor
 ```
+
+**IMPORTANT**: After configuring your settings, **remove this line** from the config file:
+```toml
+# REMOVE THIS LINE AFTER CONFIGURATION: # CONFIGURATION_NEEDED
+```
+
+The application will **not start** until this marker line is removed - this ensures you don't accidentally run with the default placeholder values!
+
+#### What Happens If You Run It Again Before Configuring?
+
+If you try to run the application again without removing the marker line, you'll see:
+
+```
+=== CONFIGURATION REQUIRED ===
+Configuration file found but not configured: ./config.toml
+Please edit this file with your settings before running the application again.
+IMPORTANT: Remove the line '# CONFIGURATION_NEEDED' after configuring!
+Required fields to configure:
+  - webhook_secret: Your GitHub webhook secret
+  - api_key: Your API key for authentication
+  - repositories: Map of repository names to local paths
+===============================
+```
+
+This prevents you from accidentally running with placeholder values!
 
 ### Step 4: Start the Tool
 ```bash
@@ -139,8 +165,11 @@ The application searches for `config.toml` in these locations (in order):
 If no configuration file is found, the application will:
 - Create a comprehensive default `config.toml` in the current directory
 - Include helpful comments and examples for all options
+- Add a **configuration marker** (`# CONFIGURATION_NEEDED`) to prevent accidental startup
 - Clearly mark required vs optional settings
 - Exit with instructions for you to configure it
+
+**Configuration Marker System**: The created config file includes a special marker that must be removed after configuration. This prevents the application from starting with placeholder values and ensures you review all required settings.
 
 ### Configuration Settings
 

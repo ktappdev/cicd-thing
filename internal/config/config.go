@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -21,6 +22,9 @@ type Config struct {
 	LogFile           string `toml:"log_file"`
 	MaxLogSizeMB      int    `toml:"max_log_size_mb"`      // Max log file size before rotation (MB)
 	MaxRotatedLogs    int    `toml:"max_rotated_logs"`     // Number of rotated logs to keep
+
+	// Configuration status (not saved to TOML)
+	Configured bool `toml:"-"` // Whether the config has been properly set up
 
 	// Repository mappings (repo -> local path)
 	RepoMap map[string]string `toml:"repositories"`
@@ -84,6 +88,17 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// isConfigured checks if a config file has been properly configured
+func isConfigured(configPath string) (bool, error) {
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		return false, err
+	}
+
+	// Check for the configuration marker
+	return !strings.Contains(string(content), "# CONFIGURATION_NEEDED"), nil
+}
+
 // findConfigFile searches for config.toml in multiple locations
 func findConfigFile() (string, error) {
 	// Define search paths in order of preference
@@ -102,8 +117,28 @@ func findConfigFile() (string, error) {
 	// Search for existing config file
 	for _, path := range searchPaths {
 		if _, err := os.Stat(path); err == nil {
-			fmt.Printf("Found config file: %s\n", path)
-			return path, nil
+			// Check if the config file has been properly configured
+			configured, err := isConfigured(path)
+			if err != nil {
+				return "", fmt.Errorf("failed to check config status: %w", err)
+			}
+
+			if configured {
+				fmt.Printf("Found config file: %s\n", path)
+				return path, nil
+			} else {
+				// Config file exists but is not configured
+				fmt.Printf("\n=== CONFIGURATION REQUIRED ===\n")
+				fmt.Printf("Configuration file found but not configured: %s\n", path)
+				fmt.Printf("Please edit this file with your settings before running the application again.\n")
+				fmt.Printf("IMPORTANT: Remove the line '# CONFIGURATION_NEEDED' after configuring!\n")
+				fmt.Printf("Required fields to configure:\n")
+				fmt.Printf("  - webhook_secret: Your GitHub webhook secret\n")
+				fmt.Printf("  - api_key: Your API key for authentication\n")
+				fmt.Printf("  - repositories: Map of repository names to local paths\n")
+				fmt.Printf("===============================\n\n")
+				return "", fmt.Errorf("configuration file at %s needs to be configured - remove '# CONFIGURATION_NEEDED' line when done", path)
+			}
 		}
 	}
 
@@ -134,6 +169,7 @@ func createDefaultConfig(path string) error {
 	}
 
 	defaultConfig := `# CICD-Thing Configuration File
+# REMOVE THIS LINE AFTER CONFIGURATION: # CONFIGURATION_NEEDED
 # Please configure the required settings below
 
 # Server settings
