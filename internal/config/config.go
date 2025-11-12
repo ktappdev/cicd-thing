@@ -33,9 +33,6 @@ type Config struct {
 	Commands        map[string]string `toml:"commands"`
 	DefaultCommands string            `toml:"default_commands"`
 
-	// Rollback commands per app
-	RollbackCommands map[string]string `toml:"rollback_commands"`
-
 	// Branch filtering
 	BranchFilter string `toml:"branch_filter"`
 
@@ -43,9 +40,6 @@ type Config struct {
 	ConcurrencyLimit int           `toml:"concurrency_limit"`
 	TimeoutSeconds   int           `toml:"timeout_seconds"`
 	Timeout          time.Duration `toml:"-"` // Computed field
-
-	// Security
-	IPAllowlist []string `toml:"ip_allowlist"`
 
 	// Features
 	DryRun bool `toml:"dry_run"`
@@ -56,7 +50,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		// Set defaults
 		Port:             "3000",
-		LogFile:          "./deployer.log",
+		LogFile:          "./cicd-thing.log",
 		MaxLogSizeMB:     10, // 10MB default
 		MaxRotatedLogs:   5,  // Keep 5 rotated logs
 		DefaultCommands:  "git pull && npm ci && npm run build",
@@ -206,9 +200,6 @@ timeout_seconds = 300
 
 # Features
 dry_run = false
-
-# Security (optional)
-# ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
 
 # Repository mappings - REQUIRED
 # Map repository names to local deployment paths

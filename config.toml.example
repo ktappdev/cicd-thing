@@ -13,7 +13,7 @@ webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook
 api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
 
 # Logging
-log_file = "./deployer.log"
+log_file = "./cicd-thing.log"
 
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
@@ -42,7 +42,3 @@ dry_run = false
 "my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
 "api-service" = "git pull && go build && systemctl restart api-service"
 
-# Per-application rollback commands (optional)
-[rollback_commands]
-"my-app" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-app"
-"api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"

@@ -41,7 +41,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 6. Your changes are now live!
 ```
 
-**If something goes wrong:** You can configure rollback commands that run automatically on failure to undo or mitigate a bad deployment (see [Rollback Commands](#rollback-commands-what-to-do-if-deployment-fails)).
+**If something goes wrong:** Future versions will support built-in rollback strategies. For now, handle rollback manually in your deployment commands or scripts.
 
 ## Quick Start Guide
 
@@ -199,7 +199,7 @@ api_key = "YOUR_API_KEY_HERE"                # REQUIRED
 
 ```toml
 # Logging
-log_file = "./deployer.log"
+log_file = "./cicd-thing.log"
 max_log_size_mb = 10      # Rotate log when it reaches this size (MB)
 max_rotated_logs = 5      # Keep this many rotated log files
 
@@ -216,13 +216,12 @@ timeout_seconds = 300
 # Features
 dry_run = false
 
-# Security (optional)
-ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+
 ```
 
 | Setting | What It Does | Default | Example |
 |---------|--------------|---------|----------|
-| `log_file` | Path to the log file | `./deployer.log` | `/var/log/cicd-thing.log` |
+| `log_file` | Path to the log file | `./cicd-thing.log` | `/var/log/cicd-thing.log` |
 | `max_log_size_mb` | Rotate log when it reaches this size (MB) | `10` | `50` |
 | `max_rotated_logs` | Number of rotated log files to keep | `5` | `10` |
 | `port` | What port the tool runs on | `3000` | `8080` |
@@ -260,15 +259,9 @@ Tell the tool what commands to run when deploying each project:
 "api-service" = "git pull && go build -o api . && systemctl restart api"
 ```
 
-### Rollback Commands (What to do if deployment fails)
+### Rollback (Planned Feature)
 
-If something goes wrong, these commands will undo the deployment:
-
-```toml
-[rollback_commands]
-"my-website" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-website"
-"api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
-```
+Upcoming versions will provide first-class rollback support (tracking previous deployment state and enabling safe, automated rollbacks). For now, implement any rollback logic directly in your own deployment tooling or scripts.
 
 ## Upcoming Features
 
@@ -322,7 +315,7 @@ The tool provides several web endpoints you can use:
 
 1. **Push to GitHub** → Webhook triggered → Deployment executed
 2. **Manual deployment** via API
-3. **Automatic rollback commands** on failure (if configured)
+3. (Planned) Automated rollback support based on tracked deployment history
 
 ### Example Deployment Commands
 

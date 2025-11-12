@@ -41,11 +41,11 @@ func New(cfg *config.Config, executor *deployment.Executor, logger *logger.Logge
 // Start starts the HTTP server
 func (s *Server) Start() error {
 	// Set up routes with security middleware
-	http.HandleFunc("/webhook", s.security.IPAllowlistMiddleware(s.webhookHandler.HandleWebhook))
+	http.HandleFunc("/webhook", s.webhookHandler.HandleWebhook)
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/status", s.handleStatus)
-	http.HandleFunc("/deploy", s.security.IPAllowlistMiddleware(s.security.AuthMiddleware(s.handleManualDeploy)))
-	http.HandleFunc("/logs", s.security.IPAllowlistMiddleware(s.security.RateLimitMiddleware(s.handleLogs)))
+	http.HandleFunc("/deploy", s.security.AuthMiddleware(s.handleManualDeploy))
+	http.HandleFunc("/logs", s.security.RateLimitMiddleware(s.handleLogs))
 
 	// Start server
 	addr := ":" + s.config.Port
@@ -77,8 +77,6 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		"features": map[string]bool{
 			"webhook_listener":  true,
 			"manual_deployment": true,
-			"rollback_support":  len(s.config.RollbackCommands) > 0,
-			"ip_allowlist":      len(s.config.IPAllowlist) > 0,
 		},
 	}
 

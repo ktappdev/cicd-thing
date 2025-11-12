@@ -162,11 +162,6 @@ func (e *Executor) runCommands(ctx context.Context, req *Request, result *Result
 			result.ExitCode = cmd.ProcessState.ExitCode()
 			result.Output = output.String()
 
-			// Attempt rollback if configured
-			if e.shouldRollback(req.Repository) {
-				e.performRollback(req, result)
-			}
-
 			return result
 		}
 	}
@@ -237,38 +232,6 @@ func (e *Executor) releaseLock(appName string) {
 	e.lockMutex.Lock()
 	defer e.lockMutex.Unlock()
 	delete(e.locks, appName)
-}
-
-// shouldRollback checks if rollback should be performed for a repository
-func (e *Executor) shouldRollback(repository string) bool {
-	appName := e.mapper.GetAppName(repository)
-	_, exists := e.config.RollbackCommands[appName]
-	return exists
-}
-
-// performRollback performs rollback for a failed deployment
-func (e *Executor) performRollback(req *Request, result *Result) {
-	appName := e.mapper.GetAppName(req.Repository)
-	rollbackCmd, exists := e.config.RollbackCommands[appName]
-	if !exists {
-		return
-	}
-
-	// Execute rollback command
-	ctx, cancel := context.WithTimeout(context.Background(), e.config.Timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, "sh", "-c", rollbackCmd)
-	cmd.Dir = req.LocalPath
-	cmd.Env = os.Environ()
-
-	rollbackOutput, err := cmd.CombinedOutput()
-	if err != nil {
-		result.Error += fmt.Sprintf("\nRollback failed: %v\nRollback output: %s", err, string(rollbackOutput))
-	} else {
-		result.Status = StatusRollback
-		result.Output += fmt.Sprintf("\nRollback executed successfully:\n%s", string(rollbackOutput))
-	}
 }
 
 // generateID generates a unique ID for deployment requests
