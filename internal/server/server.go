@@ -118,6 +118,13 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 			"timeout_seconds":   s.config.TimeoutSeconds,
 			"branch_filter":     s.config.BranchFilter,
 			"dry_run":           s.config.DryRun,
+			"config_precedence": []string{
+				"~/.config/cicd-thing/config.toml",
+				"/etc/cicd-thing/config.toml",
+				"/usr/local/etc/cicd-thing/config.toml",
+				"./config.toml (legacy)",
+				"./config/config.toml (legacy)",
+			},
 		},
 	}
 

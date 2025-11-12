@@ -19,9 +19,9 @@ type Config struct {
 	APIKey        string `toml:"api_key"`
 
 	// Logging
-	LogFile           string `toml:"log_file"`
-	MaxLogSizeMB      int    `toml:"max_log_size_mb"`      // Max log file size before rotation (MB)
-	MaxRotatedLogs    int    `toml:"max_rotated_logs"`     // Number of rotated logs to keep
+	LogFile        string `toml:"log_file"`
+	MaxLogSizeMB   int    `toml:"max_log_size_mb"`  // Max log file size before rotation (MB)
+	MaxRotatedLogs int    `toml:"max_rotated_logs"` // Number of rotated logs to keep
 
 	// Configuration status (not saved to TOML)
 	Configured bool `toml:"-"` // Whether the config has been properly set up
@@ -57,8 +57,8 @@ func Load() (*Config, error) {
 		// Set defaults
 		Port:             "3000",
 		LogFile:          "./deployer.log",
-		MaxLogSizeMB:     10,   // 10MB default
-		MaxRotatedLogs:   5,    // Keep 5 rotated logs
+		MaxLogSizeMB:     10, // 10MB default
+		MaxRotatedLogs:   5,  // Keep 5 rotated logs
 		DefaultCommands:  "git pull && npm ci && npm run build",
 		BranchFilter:     "main",
 		ConcurrencyLimit: 2,
@@ -102,17 +102,24 @@ func isConfigured(configPath string) (bool, error) {
 // findConfigFile searches for config.toml in multiple locations
 func findConfigFile() (string, error) {
 	// Define search paths in order of preference
-	searchPaths := []string{
-		"./config.toml",                         // Current directory
-		"./config/config.toml",                  // Local config directory
-		"/etc/cicd-thing/config.toml",           // System-wide config
-		"/usr/local/etc/cicd-thing/config.toml", // Alternative system config
-	}
+	searchPaths := []string{}
 
-	// Add user home directory path
+	// Add user home directory config path first (primary location)
 	if homeDir, err := os.UserHomeDir(); err == nil {
 		searchPaths = append(searchPaths, filepath.Join(homeDir, ".config", "cicd-thing", "config.toml"))
 	}
+
+	// System-wide config locations
+	searchPaths = append(searchPaths,
+		"/etc/cicd-thing/config.toml",           // System-wide config
+		"/usr/local/etc/cicd-thing/config.toml", // Alternative system config
+	)
+
+	// Legacy locations (read-only fallback, no auto-creation)
+	searchPaths = append(searchPaths,
+		"./config.toml",        // Legacy current directory
+		"./config/config.toml", // Legacy local config directory
+	)
 
 	// Search for existing config file
 	for _, path := range searchPaths {
@@ -142,8 +149,13 @@ func findConfigFile() (string, error) {
 		}
 	}
 
-	// No config file found, create default in current directory
-	defaultPath := "./config.toml"
+	// No config file found, create default in user config directory (~/.config/cicd-thing/config.toml)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to determine home directory for default config: %w", err)
+	}
+
+	defaultPath := filepath.Join(homeDir, ".config", "cicd-thing", "config.toml")
 	if err := createDefaultConfig(defaultPath); err != nil {
 		return "", fmt.Errorf("failed to create default config: %w", err)
 	}

@@ -6,16 +6,21 @@ This document provides real-world examples of how to configure CI/CD Thing for d
 
 ### Basic Node.js App with PM2
 
-**.env configuration:**
-```bash
-REPO_MAP=myorg/webapp:~/apps/webapp
-COMMANDS_webapp=git pull && npm ci && npm run build && pm2 restart webapp
-ROLLBACK_COMMANDS_webapp=git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart webapp
+**config.toml configuration:**
+```toml
+[repositories]
+"myorg/webapp" = "~/apps/webapp"
+
+[commands]
+"webapp" = "git pull && npm ci && npm run build && pm2 restart webapp"
+
+[rollback_commands]
+"webapp" = "git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart webapp"
 ```
 
 ### Next.js Application
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/nextjs-app:~/apps/nextjs-app
 COMMANDS_nextjs-app=git pull && npm ci && npm run build && pm2 restart nextjs-app
@@ -24,7 +29,7 @@ ROLLBACK_COMMANDS_nextjs-app=git reset --hard HEAD~1 && npm ci && npm run build 
 
 ### Node.js API with Database Migrations
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/api:~/apps/api
 COMMANDS_api=git pull && npm ci && npm run migrate && npm run build && pm2 restart api
@@ -35,7 +40,7 @@ ROLLBACK_COMMANDS_api=git reset --hard HEAD~1 && npm ci && npm run migrate:rollb
 
 ### Simple Go Web Server
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/go-api:~/apps/go-api
 COMMANDS_go-api=git pull && go build -o api . && systemctl restart go-api
@@ -44,7 +49,7 @@ ROLLBACK_COMMANDS_go-api=git reset --hard HEAD~1 && go build -o api . && systemc
 
 ### Go Application with Tests
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/go-service:~/apps/go-service
 COMMANDS_go-service=git pull && go test ./... && go build -o service . && systemctl restart go-service
@@ -55,7 +60,7 @@ ROLLBACK_COMMANDS_go-service=git reset --hard HEAD~1 && go build -o service . &&
 
 ### Django Application
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/django-app:~/apps/django-app
 COMMANDS_django-app=git pull && pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && systemctl restart django-app
@@ -64,7 +69,7 @@ ROLLBACK_COMMANDS_django-app=git reset --hard HEAD~1 && pip install -r requireme
 
 ### Flask API with Gunicorn
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/flask-api:~/apps/flask-api
 COMMANDS_flask-api=git pull && pip install -r requirements.txt && systemctl restart flask-api
@@ -75,7 +80,7 @@ ROLLBACK_COMMANDS_flask-api=git reset --hard HEAD~1 && pip install -r requiremen
 
 ### Single Container Application
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/docker-app:~/apps/docker-app
 COMMANDS_docker-app=git pull && docker build -t myapp:latest . && docker stop myapp || true && docker run -d --name myapp -p 8080:8080 myapp:latest
@@ -84,7 +89,7 @@ ROLLBACK_COMMANDS_docker-app=git reset --hard HEAD~1 && docker build -t myapp:la
 
 ### Docker Compose Application
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/compose-app:~/apps/compose-app
 COMMANDS_compose-app=git pull && docker-compose down && docker-compose build && docker-compose up -d
@@ -95,7 +100,7 @@ ROLLBACK_COMMANDS_compose-app=git reset --hard HEAD~1 && docker-compose down && 
 
 ### Hugo Static Site
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/hugo-site:~/sites/hugo-site
 COMMANDS_hugo-site=git pull && hugo --minify && rsync -av --delete public/ /var/www/html/
@@ -104,7 +109,7 @@ ROLLBACK_COMMANDS_hugo-site=git reset --hard HEAD~1 && hugo --minify && rsync -a
 
 ### Jekyll Site
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/jekyll-site:~/sites/jekyll-site
 COMMANDS_jekyll-site=git pull && bundle install && bundle exec jekyll build && rsync -av --delete _site/ /var/www/html/
@@ -115,7 +120,7 @@ ROLLBACK_COMMANDS_jekyll-site=git reset --hard HEAD~1 && bundle install && bundl
 
 ### Staging and Production
 
-**Staging .env:**
+**Staging config.toml snippet:**
 ```bash
 PORT=3001
 REPO_MAP=myorg/app:~/staging/app
@@ -124,7 +129,7 @@ BRANCH_FILTER=develop
 LOG_FILE=/var/log/deployer-staging.log
 ```
 
-**Production .env:**
+**Production config.toml snippet:**
 ```bash
 PORT=3000
 REPO_MAP=myorg/app:~/production/app
@@ -137,7 +142,7 @@ LOG_FILE=/var/log/deployer-production.log
 
 ### Multiple Repositories
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/frontend:~/apps/frontend,myorg/backend:~/apps/backend,myorg/docs:~/sites/docs
 
@@ -158,7 +163,7 @@ ROLLBACK_COMMANDS_docs=git reset --hard HEAD~1 && hugo --minify && rsync -av --d
 
 ### Complex Deployment Pipeline
 
-**.env configuration:**
+**config.toml configuration:**
 ```bash
 REPO_MAP=myorg/complex-app:~/apps/complex-app
 COMMANDS_complex-app=git pull && npm ci && npm run test && npm run lint && npm run build && docker build -t complex-app:latest . && docker-compose down && docker-compose up -d && npm run smoke-test

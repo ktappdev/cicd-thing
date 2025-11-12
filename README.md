@@ -18,7 +18,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 
 - **Instant Deployments**: Your changes go live seconds after you push to GitHub
 - **Secure**: Only deploys when GitHub sends the correct secret key
-- **Safe**: Can automatically undo deployments if something goes wrong
+- **Safe**: Supports custom rollback commands on failure (see [Rollback Commands](#rollback-commands-what-to-do-if-deployment-fails))
 - **Multiple Projects**: Handle many websites/apps from one tool
 - **Smart**: Only deploys from specific branches (like `main`)
 - **Transparent**: See exactly what's happening with detailed logs
@@ -41,7 +41,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 6. Your changes are now live!
 ```
 
-**If something goes wrong:** The tool can automatically undo the deployment and restore the previous version.
+**If something goes wrong:** You can configure rollback commands that run automatically on failure to undo or mitigate a bad deployment (see [Rollback Commands](#rollback-commands-what-to-do-if-deployment-fails)).
 
 ## Quick Start Guide
 
@@ -85,11 +85,11 @@ cicd-thing
 # or if building from source: ./cicd-thing
 ```
 
-The application will create a `config.toml` file with a **configuration marker** and show you what needs to be configured:
+The application will create a `config.toml` file in `~/.config/cicd-thing/config.toml` with a **configuration marker** and show you what needs to be configured:
 
 ```
 === CONFIGURATION REQUIRED ===
-A default configuration file has been created at: ./config.toml
+A default configuration file has been created at: ~/.config/cicd-thing/config.toml
 Please edit this file with your settings before running the application again.
 Required fields to configure:
   - webhook_secret: Your GitHub webhook secret
@@ -102,7 +102,7 @@ Required fields to configure:
 
 ```bash
 # Edit the config file with your settings
-nano config.toml  # or use any text editor
+nano ~/.config/cicd-thing/config.toml  # or use any text editor
 ```
 
 **IMPORTANT**: After configuring your settings, **remove this line** from the config file:
@@ -118,7 +118,7 @@ If you try to run the application again without removing the marker line, you'll
 
 ```
 === CONFIGURATION REQUIRED ===
-Configuration file found but not configured: ./config.toml
+Configuration file found but not configured: ~/.config/cicd-thing/config.toml
 Please edit this file with your settings before running the application again.
 IMPORTANT: Remove the line '# CONFIGURATION_NEEDED' after configuring!
 Required fields to configure:
@@ -154,16 +154,16 @@ cicd-thing
 
 The application searches for `config.toml` in these locations (in order):
 
-1. `./config.toml` (current directory) - **Best for development**
-2. `./config/config.toml` (local config directory)
-3. `/etc/cicd-thing/config.toml` (system-wide config) - **Best for production**
-4. `/usr/local/etc/cicd-thing/config.toml` (alternative system config)
-5. `~/.config/cicd-thing/config.toml` (user home directory)
+1. `~/.config/cicd-thing/config.toml` (primary per-user config)
+2. `/etc/cicd-thing/config.toml` (system-wide config)
+3. `/usr/local/etc/cicd-thing/config.toml` (alternative system config)
+4. `./config.toml` (legacy current directory support)
+5. `./config/config.toml` (legacy local config directory support)
 
 ### Automatic Configuration Creation
 
 If no configuration file is found, the application will:
-- Create a comprehensive default `config.toml` in the current directory
+- Create a comprehensive default `config.toml` at `~/.config/cicd-thing/config.toml`
 - Include helpful comments and examples for all options
 - Add a **configuration marker** (`# CONFIGURATION_NEEDED`) to prevent accidental startup
 - Clearly mark required vs optional settings
@@ -270,6 +270,11 @@ If something goes wrong, these commands will undo the deployment:
 "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
 ```
 
+## Upcoming Features
+
+- Built-in version tracking to automatically capture previous deployment state.
+- First-class "one-click" rollback to the last known good deployment.
+
 ## Documentation for Everyone
 
 - **[Getting Started Guide](GETTING_STARTED.md)** - Step-by-step setup for beginners
@@ -317,7 +322,7 @@ The tool provides several web endpoints you can use:
 
 1. **Push to GitHub** → Webhook triggered → Deployment executed
 2. **Manual deployment** via API
-3. **Automatic rollback** on failure (if configured)
+3. **Automatic rollback commands** on failure (if configured)
 
 ### Example Deployment Commands
 

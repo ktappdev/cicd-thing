@@ -33,32 +33,34 @@ cd cicd-thing
 go mod tidy
 ```
 
-### Step 3: Create Your Configuration
+### Step 3: Create Your Configuration (TOML-based)
 
-1. **Copy the example settings:**
+The current version uses a `config.toml` file instead of `.env`.
+
+On first run, CICD-Thing will look for a config file and, if none is found, create one at:
+
+- `~/.config/cicd-thing/config.toml`
+
+You can also create or manage it manually at that path.
+
+1. **Edit your config file:**
    ```bash
-   cp .env.example .env
+   nano ~/.config/cicd-thing/config.toml
    ```
 
-2. **Edit your settings:**
-   ```bash
-   nano .env
+2. **Set these required settings:**
+   ```toml
+   webhook_secret = "your-secret-password-here"
+   api_key = "your-api-key-here"
+
+   [repositories]
+   "johndoe/my-website" = "/var/www/my-website"
    ```
 
-3. **Fill in these important settings:**
-   ```bash
-   # Create a secret password (use any random text)
-   WEBHOOK_SECRET=your-secret-password-here
-   
-   # Create an API key (use any random text)
-   API_KEY=your-api-key-here
-   
-   # Tell it where your website code is
-   # Format: github-username/repository-name:path-on-your-server
-   REPO_MAP=johndoe/my-website:~/websites/my-website
-   
-   # What commands to run when deploying (examples below)
-   COMMANDS_my-website=git pull && npm install && npm run build && pm2 restart my-website
+3. **Add deployment commands (optional, recommended):**
+   ```toml
+   [commands]
+   "my-website" = "git pull && npm install && npm run build && pm2 restart my-website"
    ```
 
 ### Step 4: Set Up Your Deployment Commands
@@ -159,15 +161,15 @@ This means:
 ## Advanced Features 🎯
 
 ### Dry Run Mode (Testing)
-Add this to your `.env` to test without actually deploying:
-```bash
-DRY_RUN=true
+Enable test mode in your config (no real commands executed):
+```toml
+dry_run = true
 ```
 
 ### Deploy Only from Specific Branch
 Only deploy when you push to the "main" branch:
-```bash
-BRANCH_FILTER=main
+```toml
+branch_filter = "main"
 ```
 
 ### Manual Deployment
