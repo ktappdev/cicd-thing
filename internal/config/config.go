@@ -30,6 +30,9 @@ type Config struct {
 	// Repository mappings (repo -> local path)
 	RepoMap map[string]string `toml:"repositories"`
 
+	// Optional explicit app names per repository (repo -> app name)
+	AppNames map[string]string `toml:"app_names"`
+
 	// Commands per app
 	Commands        map[string]string `toml:"commands"`
 	DefaultCommands string            `toml:"default_commands"`
@@ -197,8 +200,14 @@ max_rotated_logs = 5      # Keep this many rotated log files
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
 
-# Branch filtering (only deploy from this branch)
+# Branch filtering
+# Global default: only deploy from this branch if no per-app override is set
 branch_filter = "main"
+
+# Optional: per-app branch filters (keys match app names used in [commands])
+[branch_filters]
+# "my-app" = "main"
+# "api-service" = "release"
 
 # Performance settings
 concurrency_limit = 2
@@ -210,13 +219,18 @@ dry_run = false
 # Repository mappings - REQUIRED
 # Map repository names to local deployment paths
 [repositories]
-# "my-app" = "/var/www/my-app"
-# "api-service" = "/opt/api-service"
+# "myorg/web" = "/var/www/web"
+# "myorg/api" = "/opt/api"
 
-# Per-application deployment commands (optional)
+# Optional: explicit app names per repository (to avoid repeating names)
+[app_names]
+# "myorg/web" = "web"
+# "myorg/api" = "api"
+
+# Per-application deployment commands (optional; keys are app names)
 [commands]
-# "my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
-# "api-service" = "git pull && go build && systemctl restart api-service"
+# "web" = "git pull && npm ci && npm run build && pm2 restart web"
+# "api" = "git pull && go build -o api . && systemctl restart api"
 
 # Note: Built-in rollback configuration is planned for a future version.
 # For now, implement any rollback behavior using your own scripts or deployment tooling.

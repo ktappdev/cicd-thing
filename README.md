@@ -241,28 +241,26 @@ Tell the tool which GitHub repository goes to which folder on your server:
 
 ```toml
 [repositories]
-"johndoe/my-website" = "/var/www/my-website"
-"johndoe/api-service" = "/opt/api-service"
-"company/frontend" = "/var/www/frontend"
+"myorg/web" = "/var/www/web"
+"myorg/api" = "/opt/api"
+```
+
+Optionally, define stable app names once per repo to avoid repeating names everywhere:
+
+```toml
+[app_names]
+"myorg/web" = "web"
+"myorg/api" = "api"
 ```
 
 ### Deployment Commands (What to do when deploying)
 
-Tell the tool what commands to run when deploying each project:
+Tell the tool what commands to run when deploying each project (keys are app names):
 
 ```toml
 [commands]
-# For a Node.js website:
-"my-website" = "git pull && npm ci && npm run build && pm2 restart my-website"
-
-# For a simple HTML site:
-"my-site" = "git pull && rsync -av ./ /var/www/html/"
-
-# For a Python app:
-"my-app" = "git pull && pip install -r requirements.txt && systemctl restart my-app"
-
-# For a Go application:
-"api-service" = "git pull && go build -o api . && systemctl restart api"
+"web" = "git pull && npm ci && npm run build && pm2 restart web"
+"api" = "git pull && go build -o api . && systemctl restart api"
 ```
 
 ### Rollback (Planned Feature)

@@ -41,11 +41,16 @@ dry_run = false
 # Repository mappings - REQUIRED
 # Map repository names to local deployment paths
 [repositories]
-"my-app" = "/var/www/my-app"
-"api-service" = "/opt/api-service"
+"myorg/web" = "/var/www/web"
+"myorg/api" = "/opt/api"
 
-# Per-application deployment commands (optional)
+# Optional: explicit app names per repository (to avoid repeating names)
+[app_names]
+# "myorg/web" = "web"
+# "myorg/api" = "api"
+
+# Per-application deployment commands (optional; keys are app names)
 [commands]
-"my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
-"api-service" = "git pull && go build && systemctl restart api-service"
+"web" = "git pull && npm ci && npm run build && pm2 restart web"
+"api" = "git pull && go build -o api . && systemctl restart api"
 

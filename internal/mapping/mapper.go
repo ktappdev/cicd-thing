@@ -38,9 +38,17 @@ func (m *Mapper) GetLocalPath(repoFullName string) (string, error) {
 	return expandedPath, nil
 }
 
-// GetAppName extracts the application name from repository full name
-// For example: "octocat/Hello-World" -> "Hello-World"
+// GetAppName returns the logical app name for a repository.
+// Resolution order:
+// 1. If AppNames[repoFullName] is set in config, use that
+// 2. Else derive from repository name ("owner/name" -> "name")
 func (m *Mapper) GetAppName(repoFullName string) string {
+	if m.config.AppNames != nil {
+		if name, ok := m.config.AppNames[repoFullName]; ok && name != "" {
+			return name
+		}
+	}
+
 	parts := strings.Split(repoFullName, "/")
 	if len(parts) >= 2 {
 		return parts[1]
