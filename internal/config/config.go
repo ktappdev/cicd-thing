@@ -188,7 +188,7 @@ webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook
 api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
 
 # Logging
-log_file = "./deployer.log"
+log_file = "./cicd-thing.log"
 max_log_size_mb = 10      # Rotate log when it reaches this size (MB)
 max_rotated_logs = 5      # Keep this many rotated log files
 
