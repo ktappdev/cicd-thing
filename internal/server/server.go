@@ -161,12 +161,10 @@ func (s *Server) handleManualDeploy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set defaults
+	// Set default branch if not provided
 	if branch == "" {
-		branch = s.config.BranchFilter
-		if branch == "" {
-			branch = "main"
-		}
+		appName := s.executor.GetAppName(repo)
+		branch = s.config.GetAllowedBranch(appName)
 	}
 	if commit == "" {
 		commit = "HEAD"

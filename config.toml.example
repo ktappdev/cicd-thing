@@ -18,8 +18,14 @@ log_file = "./cicd-thing.log"
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
 
-# Branch filtering (only deploy from this branch)
+# Branch filtering
+# Global default: only deploy from this branch if no per-app override is set
 branch_filter = "main"
+
+# Optional: per-app branch filters (keys match app names used in [commands])
+[branch_filters]
+# "my-app" = "main"
+# "api-service" = "release"
 
 # Performance settings
 concurrency_limit = 2

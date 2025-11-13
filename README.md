@@ -206,8 +206,14 @@ max_rotated_logs = 5      # Keep this many rotated log files
 # Default commands to run for deployments
 default_commands = "git pull && npm ci && npm run build"
 
-# Branch filtering (only deploy from this branch)
+# Branch filtering
+# Global default when no per-app override is set
 branch_filter = "main"
+
+# Optional per-app branch filters (keys match app names used in [commands])
+[branch_filters]
+# "my-app" = "main"
+# "api-service" = "release"
 
 # Performance settings
 concurrency_limit = 2

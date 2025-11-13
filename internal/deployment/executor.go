@@ -79,6 +79,11 @@ func (e *Executor) GetLocalPath(repository string) (string, error) {
 	return e.mapper.GetLocalPath(repository)
 }
 
+// GetAppName returns the app name for a repository
+func (e *Executor) GetAppName(repository string) string {
+	return e.mapper.GetAppName(repository)
+}
+
 // worker processes deployment requests from the queue
 func (e *Executor) worker() {
 	for req := range e.queue {

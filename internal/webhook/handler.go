@@ -130,15 +130,19 @@ func (h *Handler) processWebhook(payload *GitHubWebhookPayload) (*DeploymentRequ
 	// Extract branch name from ref (refs/heads/main -> main)
 	branch := strings.TrimPrefix(payload.Ref, "refs/heads/")
 
-	// Check if we should deploy this branch
-	if h.config.BranchFilter != "" && branch != h.config.BranchFilter {
-		return nil, nil // No deployment needed
-	}
-
 	// Get local path using mapper
 	localPath, err := h.mapper.GetLocalPath(payload.Repository.FullName)
 	if err != nil {
 		return nil, err
+	}
+
+	// Determine app name for branch resolution
+	appName := h.mapper.GetAppName(payload.Repository.FullName)
+	allowedBranch := h.config.GetAllowedBranch(appName)
+
+	// Check if we should deploy this branch for this app
+	if branch != allowedBranch {
+		return nil, nil // No deployment needed
 	}
 
 	// Create deployment request

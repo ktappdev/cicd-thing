@@ -35,7 +35,8 @@ type Config struct {
 	DefaultCommands string            `toml:"default_commands"`
 
 	// Branch filtering
-	BranchFilter string `toml:"branch_filter"`
+	BranchFilter  string            `toml:"branch_filter"`
+	BranchFilters map[string]string `toml:"branch_filters"`
 
 	// Concurrency and timeouts
 	ConcurrencyLimit int           `toml:"concurrency_limit"`
@@ -56,6 +57,7 @@ func Load() (*Config, error) {
 		MaxRotatedLogs:   5,  // Keep 5 rotated logs
 		DefaultCommands:  "git pull && npm ci && npm run build",
 		BranchFilter:     "main",
+		BranchFilters:    make(map[string]string),
 		ConcurrencyLimit: 2,
 		TimeoutSeconds:   300,
 		DryRun:           false,
@@ -235,4 +237,21 @@ func (c *Config) validate() error {
 		return fmt.Errorf("REPO_MAP is required")
 	}
 	return nil
+}
+
+// GetAllowedBranch returns the allowed branch for a given app/repository.
+// Resolution order:
+// 1. If BranchFilters[app] is set, use that
+// 2. Else if BranchFilter is set, use that
+// 3. Else default to "main"
+func (c *Config) GetAllowedBranch(app string) string {
+	if c.BranchFilters != nil {
+		if b, ok := c.BranchFilters[app]; ok && b != "" {
+			return b
+		}
+	}
+	if c.BranchFilter != "" {
+		return c.BranchFilter
+	}
+	return "main"
 }
