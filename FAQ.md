@@ -114,17 +114,14 @@ COMMANDS_api=git pull && go build && systemctl restart api
 Yes, when configured properly:
 - GitHub webhooks are verified with HMAC signatures
 - API endpoints require authentication
-- You can restrict access by IP address
 - All communication should use HTTPS in production
+- You restrict access using your reverse proxy, firewall, or WAF
 
 ### Should I use HTTPS?
 Yes! In production, put a reverse proxy (like nginx) in front of this tool to handle HTTPS.
 
 ### Can I restrict which IPs can trigger deployments?
-Yes! Set the `IP_ALLOWLIST` to GitHub's webhook IP ranges:
-```bash
-IP_ALLOWLIST=140.82.112.0/20,185.199.108.0/22,192.30.252.0/22
-```
+Yes. Use your reverse proxy, firewall, or WAF to allow only GitHub's webhook IP ranges or your trusted networks to reach the service.
 
 ### What if someone gets my webhook secret?
 Change it immediately in both your `.env` file and GitHub webhook settings. Restart the tool after changing.
@@ -144,10 +141,8 @@ Yes, but you might need to increase the `TIMEOUT_SECONDS` setting for projects t
 
 
 ### Can I roll back failed deployments?
-Yes! Set up `ROLLBACK_COMMANDS` for each project:
-```bash
-ROLLBACK_COMMANDS_myapp=git reset --hard HEAD~1 && npm run build && pm2 restart myapp
-```
+Built-in rollback support is planned for a future version.
+For now, implement rollback using your own scripts or deployment tooling (e.g. keeping previous builds and switching symlinks).
 
 ### Can I deploy to multiple servers?
 Not directly, but you can:
@@ -185,7 +180,7 @@ Yes! This is open-source software. Check the repository for contribution guideli
 6. Test your rollback procedures
 
 ### Should I backup before deployments?
-The tool can automatically rollback failed deployments, but having regular backups is always a good idea for your database and important files.
+Yes. Have regular backups for your database and important files so you can recover quickly if a deployment or manual rollback goes wrong.
 
 ### How often should I update the tool?
 Check for updates periodically, especially for security fixes. The tool will log its version in the health endpoint.

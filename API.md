@@ -28,20 +28,21 @@ Returns the health status and configuration of the service.
   "status": "healthy",
   "service": "cicd-thing",
   "version": "1.0.0",
-  "uptime": "running",
+  "uptime_seconds": 123,
   "config": {
     "port": "3000",
     "concurrency_limit": 2,
     "timeout_seconds": 300,
     "branch_filter": "main",
     "dry_run": false,
-    "repositories": 2
+    "repositories": 2,
+    "config_file_loaded": "/etc/cicd-thing/config.toml"
   },
   "features": {
     "webhook_listener": true,
     "manual_deployment": true,
-    "rollback_support": true,
-    "ip_allowlist": false,
+    "logs_viewer": true,
+    "rate_limited_logs": true
   }
 }
 ```
@@ -60,7 +61,8 @@ Returns detailed system status including deployment information.
   "deployments": {
     "active": 0,
     "queued": 0,
-    "completed": 0
+    "completed": 0,
+    "note": "Deployment statistics are currently placeholders - real tracking will be added in a future version"
   },
   "repositories": {
     "octocat/Hello-World": "~/projects/hello-world",
@@ -222,7 +224,7 @@ This rate limit is designed to allow normal human viewing of logs while preventi
 
 ## IP Allowlisting
 
-If configured, the `/webhook` and `/deploy` endpoints will only accept requests from allowed IP addresses or CIDR blocks.
+Note: Built-in IP allowlisting has been removed. Restrict access using your reverse proxy, firewall, or WAF instead.
 
 ## Examples
 
@@ -261,7 +263,7 @@ curl http://localhost:3000/status
 
 1. **Always use HTTPS** in production
 2. **Keep API keys secure** and rotate them regularly
-3. **Configure IP allowlisting** to restrict access
+3. **Use external network controls** (reverse proxy, firewall, WAF) to restrict access
 4. **Monitor logs** for suspicious activity
 5. **Use strong webhook secrets** (at least 20 characters)
 

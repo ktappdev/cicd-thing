@@ -179,11 +179,9 @@ curl -X POST "http://your-server:3000/deploy?repo=username/repository" \
   -H "Authorization: Bearer your-api-key"
 ```
 
-### Automatic Rollback
-If a deployment fails, automatically go back to the previous version:
-```bash
-ROLLBACK_COMMANDS_my-website=git reset --hard HEAD~1 && npm run build && pm2 restart my-website
-```
+### Rollback (Planned)
+Built-in automatic rollback support is planned for a future version.
+For now, implement rollback using your own deployment strategy (e.g. previous build directory + symlink switch).
 
 ## Getting Help 🆘
 

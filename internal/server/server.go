@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ktappdev/cicd-thing/internal/config"
 	"github.com/ktappdev/cicd-thing/internal/deployment"
@@ -25,6 +26,7 @@ type Server struct {
 	security       *security.Middleware
 	executor       *deployment.Executor
 	logger         *logger.Logger
+	startTime      time.Time
 }
 
 // New creates a new server instance
@@ -35,6 +37,7 @@ func New(cfg *config.Config, executor *deployment.Executor, logger *logger.Logge
 		security:       security.New(cfg),
 		executor:       executor,
 		logger:         logger,
+		startTime:      time.Now(),
 	}
 }
 
@@ -62,21 +65,24 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 	// Get system information
 	health := map[string]interface{}{
-		"status":  "healthy",
-		"service": "cicd-thing",
-		"version": "1.0.0",
-		"uptime":  "running", // Could be enhanced with actual uptime
+		"status":         "healthy",
+		"service":        "cicd-thing",
+		"version":        "1.0.0",
+		"uptime_seconds": int(time.Since(s.startTime).Seconds()),
 		"config": map[string]interface{}{
-			"port":              s.config.Port,
-			"concurrency_limit": s.config.ConcurrencyLimit,
-			"timeout_seconds":   s.config.TimeoutSeconds,
-			"branch_filter":     s.config.BranchFilter,
-			"dry_run":           s.config.DryRun,
-			"repositories":      len(s.config.RepoMap),
+			"port":               s.config.Port,
+			"concurrency_limit":  s.config.ConcurrencyLimit,
+			"timeout_seconds":    s.config.TimeoutSeconds,
+			"branch_filter":      s.config.BranchFilter,
+			"dry_run":            s.config.DryRun,
+			"repositories":       len(s.config.RepoMap),
+			"config_file_loaded": s.config.ConfigFilePath,
 		},
 		"features": map[string]bool{
 			"webhook_listener":  true,
 			"manual_deployment": true,
+			"logs_viewer":       true,
+			"rate_limited_logs": true,
 		},
 	}
 

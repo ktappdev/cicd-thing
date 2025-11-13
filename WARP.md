@@ -19,7 +19,6 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
    - Worker pool pattern with configurable concurrency
    - Command execution with timeout and context cancellation
    - Deployment locking mechanism to prevent concurrent deploys
-   - Rollback support for failed deployments
 
 3. **HTTP Server** (`internal/server/`)
    - REST API endpoints for webhooks, manual deploys, health, status, logs
@@ -83,7 +82,6 @@ The application searches for `config.toml` in these locations (in order):
 ### Key Configuration Sections
 - `[repositories]`: Maps GitHub repo names to local deployment paths
 - `[commands]`: Per-repository deployment commands
-- `[rollback_commands]`: Commands to execute on deployment failure
 
 ## API Endpoints
 
@@ -112,8 +110,8 @@ The server runs on port 3000 (configurable) and provides:
 
 1. **GitHub Signature Verification**: Validates webhook authenticity using HMAC-SHA256
 2. **API Key Authentication**: Bearer token auth for manual deployment endpoints
-3. **IP Allowlisting**: Optional restriction of client IP addresses
-4. **Rate Limiting**: Prevents abuse of log viewer endpoint (30 req/min)
+3. **Rate Limiting**: Prevents abuse of log viewer endpoint (30 req/min)
+4. **External Network Controls**: Use reverse proxy / firewall / WAF for IP restrictions
 
 ## Development Workflow
 
@@ -177,7 +175,6 @@ All deployment commands executed via `os/exec` with:
 - Exit code tracking for error handling
 
 ### Error Recovery
-- Failed deployments can trigger automatic rollback
 - Deployment locks prevent race conditions
 - Queue buffering handles burst webhook activity
 - Graceful shutdown on SIGTERM/SIGINT

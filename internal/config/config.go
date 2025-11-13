@@ -24,7 +24,8 @@ type Config struct {
 	MaxRotatedLogs int    `toml:"max_rotated_logs"` // Number of rotated logs to keep
 
 	// Configuration status (not saved to TOML)
-	Configured bool `toml:"-"` // Whether the config has been properly set up
+	Configured     bool   `toml:"-"` // Whether the config has been properly set up
+	ConfigFilePath string `toml:"-"` // Absolute path of the loaded config file
 
 	// Repository mappings (repo -> local path)
 	RepoMap map[string]string `toml:"repositories"`
@@ -70,6 +71,9 @@ func Load() (*Config, error) {
 	if _, err := toml.DecodeFile(configPath, cfg); err != nil {
 		return nil, fmt.Errorf("error loading config file %s: %w", configPath, err)
 	}
+
+	// Record which config file was loaded
+	cfg.ConfigFilePath = configPath
 
 	// Compute derived fields
 	cfg.Timeout = time.Duration(cfg.TimeoutSeconds) * time.Second
@@ -212,10 +216,8 @@ dry_run = false
 # "my-app" = "git pull && npm ci && npm run build && pm2 restart my-app"
 # "api-service" = "git pull && go build && systemctl restart api-service"
 
-# Per-application rollback commands (optional)
-[rollback_commands]
-# "my-app" = "git checkout HEAD~1 && npm ci && npm run build && pm2 restart my-app"
-# "api-service" = "git checkout HEAD~1 && go build && systemctl restart api-service"
+# Note: Built-in rollback configuration is planned for a future version.
+# For now, implement any rollback behavior using your own scripts or deployment tooling.
 `
 
 	return os.WriteFile(path, []byte(defaultConfig), 0o644)

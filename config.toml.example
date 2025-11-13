@@ -1,11 +1,11 @@
 # CICD-Thing Configuration File
 # Copy this file to config.toml and update with your values
 # The application will search for config.toml in these locations (in order):
-#   1. ./config.toml (current directory)
-#   2. ./config/config.toml (local config directory)
-#   3. /etc/cicd-thing/config.toml (system-wide config)
-#   4. /usr/local/etc/cicd-thing/config.toml (alternative system config)
-#   5. ~/.config/cicd-thing/config.toml (user home directory)
+#   1. ~/.config/cicd-thing/config.toml (primary per-user config)
+#   2. /etc/cicd-thing/config.toml (system-wide config)
+#   3. /usr/local/etc/cicd-thing/config.toml (alternative system config)
+#   4. ./config.toml (legacy current directory support)
+#   5. ./config/config.toml (legacy local config directory support)
 
 # Server settings
 port = "3000"
@@ -28,8 +28,9 @@ timeout_seconds = 300
 # Features
 dry_run = false
 
-# Security (optional)
-# ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
+# Security
+# Note: Built-in IP allowlisting has been removed.
+# Restrict access using your reverse proxy, firewall, or WAF instead.
 
 # Repository mappings - REQUIRED
 # Map repository names to local deployment paths

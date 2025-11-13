@@ -1,6 +1,6 @@
 # Deployment Examples
 
-This document provides real-world examples of how to configure CI/CD Thing for different types of applications.
+This document provides real-world examples of how to configure CICD-Thing using its TOML-based configuration for different types of applications.
 
 ## Node.js Applications
 
@@ -14,26 +14,25 @@ This document provides real-world examples of how to configure CI/CD Thing for d
 [commands]
 "webapp" = "git pull && npm ci && npm run build && pm2 restart webapp"
 
-[rollback_commands]
-"webapp" = "git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart webapp"
+# Note: Built-in rollback configuration is planned for a future version. For now, implement any rollback behavior in your own scripts or workflows.
 ```
 
 ### Next.js Application
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/nextjs-app:~/apps/nextjs-app
 COMMANDS_nextjs-app=git pull && npm ci && npm run build && pm2 restart nextjs-app
-ROLLBACK_COMMANDS_nextjs-app=git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart nextjs-app
+# (example) Manual rollback strategy could reset to previous commit and redeploy via your own scripts
 ```
 
 ### Node.js API with Database Migrations
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/api:~/apps/api
 COMMANDS_api=git pull && npm ci && npm run migrate && npm run build && pm2 restart api
-ROLLBACK_COMMANDS_api=git reset --hard HEAD~1 && npm ci && npm run migrate:rollback && npm run build && pm2 restart api
+# (example) Manual rollback strategy: reset to previous commit, run migrate:rollback, rebuild, and restart
 ```
 
 ## Go Applications
@@ -41,19 +40,21 @@ ROLLBACK_COMMANDS_api=git reset --hard HEAD~1 && npm ci && npm run migrate:rollb
 ### Simple Go Web Server
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/go-api:~/apps/go-api
 COMMANDS_go-api=git pull && go build -o api . && systemctl restart go-api
-ROLLBACK_COMMANDS_go-api=git reset --hard HEAD~1 && go build -o api . && systemctl restart go-api
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && go build -o api . && systemctl restart go-api
 ```
 
 ### Go Application with Tests
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/go-service:~/apps/go-service
 COMMANDS_go-service=git pull && go test ./... && go build -o service . && systemctl restart go-service
-ROLLBACK_COMMANDS_go-service=git reset --hard HEAD~1 && go build -o service . && systemctl restart go-service
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && go build -o service . && systemctl restart go-service
 ```
 
 ## Python Applications
@@ -61,19 +62,21 @@ ROLLBACK_COMMANDS_go-service=git reset --hard HEAD~1 && go build -o service . &&
 ### Django Application
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/django-app:~/apps/django-app
 COMMANDS_django-app=git pull && pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput && systemctl restart django-app
-ROLLBACK_COMMANDS_django-app=git reset --hard HEAD~1 && pip install -r requirements.txt && python manage.py migrate && systemctl restart django-app
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && pip install -r requirements.txt && python manage.py migrate && systemctl restart django-app
 ```
 
 ### Flask API with Gunicorn
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/flask-api:~/apps/flask-api
 COMMANDS_flask-api=git pull && pip install -r requirements.txt && systemctl restart flask-api
-ROLLBACK_COMMANDS_flask-api=git reset --hard HEAD~1 && pip install -r requirements.txt && systemctl restart flask-api
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && pip install -r requirements.txt && systemctl restart flask-api
 ```
 
 ## Docker Applications
@@ -81,19 +84,21 @@ ROLLBACK_COMMANDS_flask-api=git reset --hard HEAD~1 && pip install -r requiremen
 ### Single Container Application
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/docker-app:~/apps/docker-app
 COMMANDS_docker-app=git pull && docker build -t myapp:latest . && docker stop myapp || true && docker run -d --name myapp -p 8080:8080 myapp:latest
-ROLLBACK_COMMANDS_docker-app=git reset --hard HEAD~1 && docker build -t myapp:latest . && docker stop myapp || true && docker run -d --name myapp -p 8080:8080 myapp:latest
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && docker build -t myapp:latest . && docker stop myapp || true && docker run -d --name myapp -p 8080:8080 myapp:latest
 ```
 
 ### Docker Compose Application
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/compose-app:~/apps/compose-app
 COMMANDS_compose-app=git pull && docker-compose down && docker-compose build && docker-compose up -d
-ROLLBACK_COMMANDS_compose-app=git reset --hard HEAD~1 && docker-compose down && docker-compose build && docker-compose up -d
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && docker-compose down && docker-compose build && docker-compose up -d
 ```
 
 ## Static Sites
@@ -101,19 +106,21 @@ ROLLBACK_COMMANDS_compose-app=git reset --hard HEAD~1 && docker-compose down && 
 ### Hugo Static Site
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/hugo-site:~/sites/hugo-site
 COMMANDS_hugo-site=git pull && hugo --minify && rsync -av --delete public/ /var/www/html/
-ROLLBACK_COMMANDS_hugo-site=git reset --hard HEAD~1 && hugo --minify && rsync -av --delete public/ /var/www/html/
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && hugo --minify && rsync -av --delete public/ /var/www/html/
 ```
 
 ### Jekyll Site
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/jekyll-site:~/sites/jekyll-site
 COMMANDS_jekyll-site=git pull && bundle install && bundle exec jekyll build && rsync -av --delete _site/ /var/www/html/
-ROLLBACK_COMMANDS_jekyll-site=git reset --hard HEAD~1 && bundle install && bundle exec jekyll build && rsync -av --delete _site/ /var/www/html/
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && bundle install && bundle exec jekyll build && rsync -av --delete _site/ /var/www/html/
 ```
 
 ## Multi-Environment Setup
@@ -143,7 +150,7 @@ LOG_FILE=/var/log/deployer-production.log
 ### Multiple Repositories
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/frontend:~/apps/frontend,myorg/backend:~/apps/backend,myorg/docs:~/sites/docs
 
 # Frontend (React)
@@ -155,36 +162,31 @@ COMMANDS_backend=git pull && go test ./... && go build -o api . && systemctl res
 # Documentation (Hugo)
 COMMANDS_docs=git pull && hugo --minify && rsync -av --delete public/ /var/www/docs/
 
-# Rollback commands
-ROLLBACK_COMMANDS_frontend=git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart frontend
-ROLLBACK_COMMANDS_backend=git reset --hard HEAD~1 && go build -o api . && systemctl restart backend
-ROLLBACK_COMMANDS_docs=git reset --hard HEAD~1 && hugo --minify && rsync -av --delete public/ /var/www/docs/
+# Example manual rollback commands you might run yourself:
+# git reset --hard HEAD~1 && npm ci && npm run build && pm2 restart frontend
+# git reset --hard HEAD~1 && go build -o api . && systemctl restart backend
+# git reset --hard HEAD~1 && hugo --minify && rsync -av --delete public/ /var/www/docs/
 ```
 
 ### Complex Deployment Pipeline
 
 **config.toml configuration:**
-```bash
+```toml
 REPO_MAP=myorg/complex-app:~/apps/complex-app
 COMMANDS_complex-app=git pull && npm ci && npm run test && npm run lint && npm run build && docker build -t complex-app:latest . && docker-compose down && docker-compose up -d && npm run smoke-test
-ROLLBACK_COMMANDS_complex-app=git reset --hard HEAD~1 && docker build -t complex-app:latest . && docker-compose down && docker-compose up -d
-TIMEOUT_SECONDS=600
+# Example manual rollback command you might run yourself:
+# git reset --hard HEAD~1 && docker build -t complex-app:latest . && docker-compose down && docker-compose up -d
+timeout_seconds = 600
 ```
 
 ## Security Examples
 
-### IP Allowlisting
+### Network & Auth Controls
 
-```bash
-# Allow only specific IPs
-IP_ALLOWLIST=192.168.1.100,10.0.0.50
+- Use a strong `webhook_secret` to validate GitHub requests.
+- Use a strong `api_key` to protect the `/deploy` endpoint.
+- Use a reverse proxy or firewall (Nginx, Caddy, cloud WAF, security groups, etc.) to restrict access to `/webhook`, `/deploy`, and `/logs`.
 
-# Allow IP ranges
-IP_ALLOWLIST=192.168.1.0/24,10.0.0.0/8
-
-# GitHub webhook IPs (example)
-IP_ALLOWLIST=140.82.112.0/20,185.199.108.0/22,192.30.252.0/22
-```
 
 ### Webhook Security
 

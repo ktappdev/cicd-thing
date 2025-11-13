@@ -18,7 +18,7 @@ Imagine you have a website or app on GitHub. Every time you make changes and pus
 
 - **Instant Deployments**: Your changes go live seconds after you push to GitHub
 - **Secure**: Only deploys when GitHub sends the correct secret key
-- **Safe**: Supports custom rollback commands on failure (see [Rollback Commands](#rollback-commands-what-to-do-if-deployment-fails))
+- **Safe**: You can implement your own rollback strategies in your deployment commands or scripts
 - **Multiple Projects**: Handle many websites/apps from one tool
 - **Smart**: Only deploys from specific branches (like `main`)
 - **Transparent**: See exactly what's happening with detailed logs
@@ -355,10 +355,10 @@ The tool provides several web endpoints you can use:
    openssl rand -hex 32
    ```
 
-3. **Configure IP allowlist (optional):**
-   ```toml
-   ip_allowlist = ["192.168.1.0/24", "10.0.0.0/8"]
-   ```
+3. **(Recommended) Protect the service with a reverse proxy or firewall**
+   - Restrict who can reach `/webhook`, `/deploy`, and `/logs` at the network edge (e.g. Nginx, Caddy, Cloudflare, firewalls).
+   - See Network Security section below.
+
 
 ## Production Deployment
 
@@ -416,6 +416,17 @@ sudo cp cicd-thing /usr/local/bin/
    sudo systemctl enable cicd-thing
    sudo systemctl start cicd-thing
    ```
+
+## Network Security
+
+CICD-Thing relies on a combination of mechanisms for secure operation:
+
+- GitHub webhook HMAC verification for `/webhook` requests (using `webhook_secret`).
+- API key authentication for `/deploy` requests (using `api_key`).
+- Rate limiting on `/logs` to prevent abuse.
+- External network controls (reverse proxies, firewalls, WAFs, security groups, etc.) to restrict who can hit the service.
+
+We intentionally do not include a built-in IP allowlist. If you require IP-based restrictions, enforce them at the network edge.
 
 ## Monitoring
 
