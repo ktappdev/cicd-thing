@@ -419,6 +419,8 @@ sudo cp cicd-thing /usr/local/bin/
    Type=simple
    User=deploy
    ExecStart=/usr/local/bin/cicd-thing
+   WorkingDirectory=/home/deploy/.config/cicd-thing
+   Environment=HOME=/home/deploy
    Restart=always
    RestartSec=5
 
@@ -429,6 +431,12 @@ sudo cp cicd-thing /usr/local/bin/
    sudo systemctl enable cicd-thing
    sudo systemctl start cicd-thing
    ```
+
+   **Important systemd settings:**
+   - `WorkingDirectory` - Sets where the app runs from (affects relative log paths)
+   - `Environment=HOME=/home/deploy` - **Required!** Without this, the app can't find `~/.config/cicd-thing/config.toml` because systemd doesn't set HOME by default
+   - Change `/home/deploy` to match your user's home directory
+   - If using `User=root`, set `Environment=HOME=/root`
 
 ## Network Security
 
