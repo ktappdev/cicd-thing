@@ -526,6 +526,70 @@ Monitor the `/health` endpoint for service status and configuration.
    - Check file permissions on deployment paths
    - Verify user has necessary privileges for commands
 
+### ⚠️ IMPORTANT: Node Version Manager (nvm) and Systemd
+
+**Problem:** If you use `nvm` to manage Node.js and your deployment commands fail with errors like:
+```
+Command failed: pnpm install - exit status 127
+Command failed: npm run build - exit status 127
+```
+
+**Why this happens:** Systemd services run with a minimal PATH that doesn't include nvm-managed tools (node, npm, pnpm, yarn, pm2, etc.). Your interactive shell loads nvm automatically from `~/.bashrc` or `~/.zshrc`, but systemd doesn't run those files.
+
+**Solution Options:**
+
+**Option 1: Source nvm in your deployment commands (Recommended)**
+
+Add `source ~/.nvm/nvm.sh` to the beginning of each command:
+
+```toml
+[commands]
+"my-app" = "bash -c 'source ~/.nvm/nvm.sh && cd ~/my-app && git pull && pnpm install && pnpm build && pm2 restart my-app'"
+```
+
+**Why this is best:**
+- ✅ Works with any Node version you switch to via nvm
+- ✅ Uses your nvm default or project-specific `.nvmrc`
+- ✅ No need to update paths when upgrading Node
+- ✅ Portable across different servers
+
+**Option 2: Specify Node version explicitly**
+
+Use `nvm use` to pin a specific version:
+
+```toml
+[commands]
+"my-app" = "bash -c 'source ~/.nvm/nvm.sh && nvm use 22 && cd ~/my-app && git pull && pnpm install && pnpm build && pm2 restart my-app'"
+```
+
+**Why use this:**
+- ✅ Guarantees specific Node version per app
+- ✅ Prevents breakage if you change nvm default
+- ⚠️ Need to update command when upgrading Node major version
+
+**Option 3: Add nvm path to systemd service (Not Recommended)**
+
+Edit `/etc/systemd/system/cicd-thing.service`:
+```ini
+[Service]
+Environment=PATH=/home/admin/.nvm/versions/node/v22.13.1/bin:/usr/local/bin:/usr/bin:/bin
+```
+
+**Why avoid this:**
+- ❌ Breaks when you upgrade Node (hardcoded version path)
+- ❌ Affects ALL deployments (can't use different versions per app)
+- ❌ Need systemctl daemon-reload and restart after Node upgrades
+
+**Testing:**
+
+Verify your command works outside systemd:
+```bash
+# Simulate systemd environment (no PATH, no shell initialization)
+/usr/bin/env -i bash -c 'source ~/.nvm/nvm.sh && which pnpm && pnpm --version'
+```
+
+If this works, your deployment command will work in systemd.
+
 ### Debug Mode
 
 Enable dry run mode for testing:
