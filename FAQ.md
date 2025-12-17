@@ -87,7 +87,7 @@ COMMANDS_api=git pull && go build && systemctl restart api
 
 ### The webhook isn't being received
 1. **Check your server's firewall** - Make sure port 3000 is open
-2. **Verify the webhook URL** - Should be `http://your-server-ip:3000/webhook`
+2. **Verify the webhook URL** - Should be `http://your-server-ip:3000/admin/webhook` (or your custom path from config)
 3. **Check the secret** - Must match exactly between GitHub and your `.env` file
 4. **Look at GitHub's webhook delivery page** - Shows if GitHub is successfully sending webhooks
 

@@ -184,8 +184,9 @@ timeout_seconds = 600
 ### Network & Auth Controls
 
 - Use a strong `webhook_secret` to validate GitHub requests.
-- Use a strong `api_key` to protect the `/deploy` endpoint.
-- Use a reverse proxy or firewall (Nginx, Caddy, cloud WAF, security groups, etc.) to restrict access to `/webhook`, `/deploy`, and `/logs`.
+- Use a strong `api_key` to protect the manual deployment endpoint.
+- Customize endpoint paths in config.toml for security through obscurity.
+- Use a reverse proxy or firewall (Nginx, Caddy, cloud WAF, security groups, etc.) to restrict access to webhook, deployment, and logs endpoints.
 
 
 ### Webhook Security

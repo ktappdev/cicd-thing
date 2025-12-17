@@ -170,7 +170,7 @@ Returns an HTML page with:
 
 ### GitHub Webhook
 
-**POST /webhook**
+**POST /admin/webhook** (configurable)
 
 Receives GitHub webhook events and triggers deployments automatically.
 
@@ -274,3 +274,4 @@ The health and status endpoints can be integrated with monitoring systems:
 - **Prometheus**: Scrape `/health` endpoint
 - **Nagios**: Monitor `/health` for status changes
 - **Custom monitoring**: Parse JSON responses for alerts
+alerts

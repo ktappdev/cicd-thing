@@ -468,7 +468,7 @@ All deployment events are logged to the configured log file and stdout:
 
 ### Web Log Viewer
 
-Access real-time logs through the web interface at `/logs`:
+Access real-time logs through the web interface (default `/admin/logs`, configurable):
 
 ```bash
 # View logs in your browser
@@ -544,3 +544,11 @@ The application validates your configuration on startup and will show clear erro
 ## License
 
 MIT License
+ncorrect file paths
+- Network configuration issues
+
+## License
+
+MIT License
+
+

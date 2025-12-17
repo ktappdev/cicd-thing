@@ -44,15 +44,19 @@ func New(cfg *config.Config, executor *deployment.Executor, logger *logger.Logge
 // Start starts the HTTP server
 func (s *Server) Start() error {
 	// Set up routes with security middleware
-	http.HandleFunc("/webhook", s.webhookHandler.HandleWebhook)
+	http.HandleFunc(s.config.WebhookPath, s.webhookHandler.HandleWebhook)
+	log.Printf("Webhook endpoint: %s", s.config.WebhookPath)
+
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/status", s.handleStatus)
-	http.HandleFunc("/logs", s.security.RateLimitMiddleware(s.handleLogs))
+
+	http.HandleFunc(s.config.LogsPath, s.security.RateLimitMiddleware(s.handleLogs))
+	log.Printf("Logs viewer endpoint: %s", s.config.LogsPath)
 
 	// Only enable /deploy endpoint if API key is configured
 	if s.config.APIKey != "" {
-		http.HandleFunc("/deploy", s.security.AuthMiddleware(s.handleManualDeploy))
-		log.Printf("Manual deployment endpoint enabled at /deploy")
+		http.HandleFunc(s.config.DeployPath, s.security.AuthMiddleware(s.handleManualDeploy))
+		log.Printf("Manual deployment endpoint: %s", s.config.DeployPath)
 	} else {
 		log.Printf("⚠️  Manual deployment endpoint disabled (no api_key configured)")
 	}

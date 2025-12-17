@@ -18,6 +18,11 @@ type Config struct {
 	WebhookSecret string `toml:"webhook_secret"`
 	APIKey        string `toml:"api_key"`
 
+	// Endpoint paths
+	WebhookPath string `toml:"webhook_path"`
+	DeployPath  string `toml:"deploy_path"`
+	LogsPath    string `toml:"logs_path"`
+
 	// Logging
 	LogFile        string `toml:"log_file"`
 	MaxLogSizeMB   int    `toml:"max_log_size_mb"`  // Max log file size before rotation (MB)
@@ -55,6 +60,9 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		// Set defaults
 		Port:             "3000",
+		WebhookPath:      "/admin/webhook",
+		DeployPath:       "/admin/deploy",
+		LogsPath:         "/admin/logs",
 		LogFile:          "./cicd-thing.log",
 		MaxLogSizeMB:     10, // 10MB default
 		MaxRotatedLogs:   5,  // Keep 5 rotated logs
@@ -191,6 +199,11 @@ func createDefaultConfig(path string) error {
 port = "3000"
 webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook secret
 api_key = "YOUR_API_KEY_HERE"                # OPTIONAL: Set to enable /deploy endpoint for manual deployments
+
+# Endpoint paths - Customize these for security or organization
+webhook_path = "/admin/webhook"  # GitHub webhook receiver
+deploy_path = "/admin/deploy"    # Manual deployment API (requires api_key)
+logs_path = "/admin/logs"        # Log viewer (rate limited)
 
 # Logging
 log_file = "./cicd-thing.log"

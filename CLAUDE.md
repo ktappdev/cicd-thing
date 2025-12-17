@@ -99,7 +99,7 @@ Creates default configuration automatically if none exists.
 
 ### HTTP Endpoints
 
-- `POST /webhook` - GitHub webhook receiver
+- `POST /admin/webhook` - GitHub webhook receiver (configurable)
 - `POST /deploy` - Manual deployment trigger
 - `GET /health` - Health check endpoint
 - `GET /status` - Deployment status information

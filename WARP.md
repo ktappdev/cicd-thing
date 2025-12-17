@@ -86,7 +86,7 @@ The application searches for `config.toml` in these locations (in order):
 ## API Endpoints
 
 The server runs on port 3000 (configurable) and provides:
-- `POST /webhook` - GitHub webhook receiver
+- `POST /admin/webhook` - GitHub webhook receiver (configurable)
 - `POST /deploy` - Manual deployment trigger (requires auth)
 - `GET /health` - Health check and configuration info
 - `GET /status` - Deployment status and repository configuration

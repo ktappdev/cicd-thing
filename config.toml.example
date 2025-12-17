@@ -12,6 +12,11 @@ port = "3000"
 webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook secret
 api_key = "YOUR_API_KEY_HERE"                # OPTIONAL: Set to enable /deploy endpoint for manual deployments
 
+# Endpoint paths - Customize these for security or organization
+webhook_path = "/admin/webhook"  # GitHub webhook receiver
+deploy_path = "/admin/deploy"    # Manual deployment API (requires api_key)
+logs_path = "/admin/logs"        # Log viewer (rate limited)
+
 # Logging
 log_file = "./cicd-thing.log"
 

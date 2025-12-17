@@ -169,7 +169,7 @@ internal/                   # Private application code
 - External dependency: `github.com/BurntSushi/toml v1.5.0`
 
 ### GitHub Integration
-- Webhook endpoint: `/webhook` (POST)
+- Webhook endpoint: `/admin/webhook` (POST, configurable via `webhook_path`)
 - Event types: push events trigger deployments
 - Signature verification using `X-Hub-Signature-256` header
 - Repository name extraction from webhook payload

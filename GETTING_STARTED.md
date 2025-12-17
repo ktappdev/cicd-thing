@@ -100,7 +100,7 @@ COMMANDS_my-app=git pull && pip install -r requirements.txt && systemctl restart
 3. **Click "Webhooks" in the left sidebar**
 4. **Click "Add webhook"**
 5. **Fill in the form:**
-   - **Payload URL:** `http://your-server-ip:3000/webhook`
+   - **Payload URL:** `http://your-server-ip:3000/admin/webhook` (or your custom path)
    - **Content type:** `application/json`
    - **Secret:** The same password you put in `WEBHOOK_SECRET`
    - **Which events:** Select "Just the push event"
