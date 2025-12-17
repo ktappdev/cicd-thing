@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log:*)",
+      "Edit(**)",
+      "Bash(cd /Users/kentaylor/developer/cicd-thing && gitcomm -sa -ap)"
+    ]
+  }
+}

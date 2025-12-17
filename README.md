@@ -195,6 +195,15 @@ api_key = "YOUR_API_KEY_HERE"                # REQUIRED
 | `api_key` | Password for manually triggering deployments (not needed for log viewing) | `myapikey789` |
 | `repositories` | Which GitHub repos go to which folders on your server | See examples below |
 
+**Understanding webhook_secret vs api_key:**
+- **`webhook_secret`** - Used by GitHub webhooks. GitHub signs every webhook request with this secret (HMAC-SHA256). The tool verifies the signature to ensure the request is really from GitHub. You'll use this for normal push → deploy flow.
+- **`api_key`** - Used for manual deployments via the `/deploy` endpoint. Allows you to trigger deployments without pushing to GitHub (e.g., re-deploy current code, deploy from different branch, integrate with other CI/CD tools). Passed as `Authorization: Bearer <api_key>` header.
+
+**When you use each:**
+- Normal workflow (push to GitHub → auto-deploy): Uses `webhook_secret` only
+- Manual deployment via API: Uses `api_key`
+- Viewing logs/health/status: No authentication required
+
 #### Optional Settings (Have good defaults)
 
 ```toml
