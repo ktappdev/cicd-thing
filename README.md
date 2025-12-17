@@ -607,6 +607,28 @@ The application validates your configuration on startup and will show clear erro
 - Incorrect file paths
 - Network configuration issues
 
+## Contributing
+
+This project is functional but could be more user-friendly. If you have ideas for improvements, better documentation, easier setup processes, or just want to make things clearer - **your contributions are welcome!**
+
+Some areas that could use help:
+- Improving the initial setup experience
+- Better error messages and troubleshooting guides
+- UI/UX improvements for the log viewer
+- Additional documentation and examples
+- Testing (currently no tests!)
+- Feature requests and bug reports
+
+Whether it's a small documentation fix or a major feature - all contributions help make this tool better for everyone.
+
+**How to contribute:**
+1. Fork the repository
+2. Create a feature branch
+3. Make your improvements
+4. Submit a pull request
+
+Not sure where to start? Open an issue to discuss ideas or ask questions. All skill levels welcome!
+
 ## License
 
 MIT License
