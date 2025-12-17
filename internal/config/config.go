@@ -22,6 +22,8 @@ type Config struct {
 	WebhookPath string `toml:"webhook_path"`
 	DeployPath  string `toml:"deploy_path"`
 	LogsPath    string `toml:"logs_path"`
+	HealthPath  string `toml:"health_path"`
+	StatusPath  string `toml:"status_path"`
 
 	// Logging
 	LogFile        string `toml:"log_file"`
