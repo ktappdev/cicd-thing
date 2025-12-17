@@ -47,8 +47,15 @@ func (s *Server) Start() error {
 	http.HandleFunc("/webhook", s.webhookHandler.HandleWebhook)
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/status", s.handleStatus)
-	http.HandleFunc("/deploy", s.security.AuthMiddleware(s.handleManualDeploy))
 	http.HandleFunc("/logs", s.security.RateLimitMiddleware(s.handleLogs))
+
+	// Only enable /deploy endpoint if API key is configured
+	if s.config.APIKey != "" {
+		http.HandleFunc("/deploy", s.security.AuthMiddleware(s.handleManualDeploy))
+		log.Printf("Manual deployment endpoint enabled at /deploy")
+	} else {
+		log.Printf("⚠️  Manual deployment endpoint disabled (no api_key configured)")
+	}
 
 	// Start server
 	addr := ":" + s.config.Port

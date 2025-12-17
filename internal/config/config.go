@@ -190,7 +190,7 @@ func createDefaultConfig(path string) error {
 # Server settings
 port = "3000"
 webhook_secret = "YOUR_WEBHOOK_SECRET_HERE"  # REQUIRED: Set your GitHub webhook secret
-api_key = "YOUR_API_KEY_HERE"                # REQUIRED: Set your API key
+api_key = "YOUR_API_KEY_HERE"                # OPTIONAL: Set to enable /deploy endpoint for manual deployments
 
 # Logging
 log_file = "./cicd-thing.log"
