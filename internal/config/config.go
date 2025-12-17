@@ -204,6 +204,8 @@ api_key = "YOUR_API_KEY_HERE"                # OPTIONAL: Set to enable /deploy e
 webhook_path = "/admin/webhook"  # GitHub webhook receiver
 deploy_path = "/admin/deploy"    # Manual deployment API (requires api_key)
 logs_path = "/admin/logs"        # Log viewer (rate limited)
+health_path = "/health"          # Health check endpoint (public)
+status_path = "/status"          # Status information endpoint (public)
 
 # Logging
 log_file = "./cicd-thing.log"

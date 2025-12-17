@@ -306,15 +306,17 @@ The tool provides several web endpoints you can use:
   ```
 - **When to use:** When you want to deploy without pushing to GitHub
 
-### `/health` - Check if Tool is Working
+### `/health` - Check if Tool is Working (Configurable)
 - **What it does:** Shows if the tool is running properly
-- **How to use:** Visit `http://your-server:3000/health` in your browser
+- **How to use:** Visit `http://your-server:3000/health` in your browser (default path)
 - **What you'll see:** Information about the tool's status and configuration
+- **Path is configurable** via `health_path` in config.toml
 
-### `/status` - Deployment Information
+### `/status` - Deployment Information (Configurable)
 - **What it does:** Shows current deployment status and configuration
-- **How to use:** Visit `http://your-server:3000/status` in your browser
+- **How to use:** Visit `http://your-server:3000/status` in your browser (default path)
 - **What you'll see:** List of configured repositories and deployment settings
+- **Path is configurable** via `status_path` in config.toml
 
 ### `/logs` - Log Viewer
 - **What it does:** Displays real-time deployment and system logs with project identification

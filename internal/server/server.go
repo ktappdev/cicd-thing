@@ -47,8 +47,11 @@ func (s *Server) Start() error {
 	http.HandleFunc(s.config.WebhookPath, s.webhookHandler.HandleWebhook)
 	log.Printf("Webhook endpoint: %s", s.config.WebhookPath)
 
-	http.HandleFunc("/health", s.handleHealth)
-	http.HandleFunc("/status", s.handleStatus)
+	http.HandleFunc(s.config.HealthPath, s.handleHealth)
+	log.Printf("Health check endpoint: %s", s.config.HealthPath)
+
+	http.HandleFunc(s.config.StatusPath, s.handleStatus)
+	log.Printf("Status endpoint: %s", s.config.StatusPath)
 
 	http.HandleFunc(s.config.LogsPath, s.security.RateLimitMiddleware(s.handleLogs))
 	log.Printf("Logs viewer endpoint: %s", s.config.LogsPath)
